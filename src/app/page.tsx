@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -21,6 +22,7 @@ const categories = [
   "Stationery",
   "Gifts",
 ];
+
 
 export default async function Home() {
   const products =
