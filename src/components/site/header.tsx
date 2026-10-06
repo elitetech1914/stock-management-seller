@@ -103,8 +103,9 @@ export function Header() {
     );
 
   /*
-   * We show the 3 most recently
-   * added/updated cart lines.
+   * Show a maximum of three cart lines.
+   * Recently added/updated lines appear
+   * first because cart.ts appends them.
    */
   const previewItems = items
     .slice(-3)
@@ -119,7 +120,7 @@ export function Header() {
 
   /*
    * Close account/cart dropdowns
-   * when clicking elsewhere.
+   * when clicking outside them.
    */
   useEffect(() => {
     function handleClickOutside(
@@ -161,7 +162,8 @@ export function Header() {
   }, []);
 
   /*
-   * Load categories for header nav.
+   * Load category navigation
+   * dynamically.
    */
   useEffect(() => {
     let cancelled = false;
@@ -197,7 +199,7 @@ export function Header() {
   }, []);
 
   /*
-   * Category-nav scrolling.
+   * Category navigation arrows.
    */
   useEffect(() => {
     const element =
@@ -270,8 +272,8 @@ export function Header() {
   }
 
   /*
-   * Buyer login remembers the
-   * current page.
+   * Remember where the buyer was
+   * before sending them to login.
    */
   function handleBuyerSignIn(
     event: React.MouseEvent<HTMLAnchorElement>
@@ -337,6 +339,7 @@ export function Header() {
 
   return (
     <>
+      {/* WHOLESALE BAR */}
       <div className="bg-[#17352c] px-4 py-2.5 text-center text-xs font-medium text-white">
         Wholesale pricing for
         independent retailers
@@ -488,7 +491,7 @@ export function Header() {
 
                   {accountOpen && (
                     <div className="absolute right-0 top-[46px] z-[100] w-[270px] overflow-hidden rounded-[22px] border border-white/80 bg-white/70 p-2 shadow-[0_28px_80px_rgba(0,0,0,0.18)] backdrop-blur-2xl">
-                      {/* USER */}
+                      {/* USER CARD */}
                       <div className="rounded-2xl border border-white/80 bg-white/55 px-4 py-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.95)]">
                         <p className="truncate text-sm font-semibold text-neutral-950">
                           {
@@ -554,8 +557,7 @@ export function Header() {
                               />
                             }
                           >
-                            Admin
-                            dashboard
+                            Admin dashboard
                           </GlassAccountLink>
                         )}
                       </div>
@@ -608,6 +610,7 @@ export function Header() {
                 aria-expanded={
                   cartOpen
                 }
+                aria-haspopup="true"
                 aria-label={
                   totalItems > 0
                     ? `Shopping cart with ${totalItems} items`
@@ -653,52 +656,53 @@ export function Header() {
 
               {/* MINI CART */}
               {cartOpen && (
-                <div className="absolute right-0 top-[46px] z-[110] hidden w-[380px] overflow-hidden rounded-[24px] border border-white/80 bg-white/80 p-2 shadow-[0_28px_90px_rgba(0,0,0,0.20)] backdrop-blur-2xl md:block">
+                <div className="absolute right-0 top-[46px] z-[110] hidden w-[380px] overflow-hidden rounded-[22px] border border-white/80 bg-white/70 p-2 shadow-[0_28px_80px_rgba(0,0,0,0.18)] backdrop-blur-2xl md:block">
                   {/* CART HEADER */}
-                  <div className="flex items-center justify-between rounded-2xl border border-white/80 bg-white/55 px-4 py-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.95)]">
-                    <div>
-                      <p className="text-sm font-semibold text-neutral-950">
-                        Your cart
-                      </p>
+                  <div className="rounded-2xl border border-white/80 bg-white/55 px-4 py-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.95)]">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <p className="text-sm font-semibold text-neutral-950">
+                          Your cart
+                        </p>
 
-                      <p className="mt-0.5 text-xs text-neutral-500">
-                        {totalItems ===
-                        0
-                          ? "No items yet"
-                          : `${totalItems} ${
-                              totalItems ===
-                              1
-                                ? "item"
-                                : "items"
-                            }`}
-                      </p>
+                        <p className="mt-0.5 text-xs text-neutral-500">
+                          {totalItems ===
+                          0
+                            ? "No items yet"
+                            : `${totalItems} ${
+                                totalItems ===
+                                1
+                                  ? "item"
+                                  : "items"
+                              }`}
+                        </p>
+                      </div>
+
+                      <ShoppingBag
+                        size={18}
+                        className="text-neutral-500"
+                      />
                     </div>
-
-                    <ShoppingBag
-                      size={18}
-                      className="text-neutral-500"
-                    />
                   </div>
 
                   {items.length === 0 ? (
                     /* EMPTY CART */
-                    <div className="px-5 py-8 text-center">
-                      <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-neutral-100 text-neutral-500">
+                    <div className="mt-2 rounded-2xl border border-white/80 bg-white/30 px-5 py-7 text-center">
+                      <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full border border-white/80 bg-white/55 text-neutral-500 shadow-sm">
                         <ShoppingBag
                           size={19}
                         />
                       </div>
 
-                      <p className="mt-4 text-sm font-semibold text-neutral-900">
+                      <p className="mt-4 text-sm font-semibold text-neutral-950">
                         Your cart is
                         empty
                       </p>
 
-                      <p className="mx-auto mt-1.5 max-w-[240px] text-xs leading-5 text-neutral-500">
-                        Browse the
-                        wholesale
-                        catalog and add
-                        products to your
+                      <p className="mx-auto mt-1.5 max-w-[230px] text-xs leading-5 text-neutral-500">
+                        Add wholesale
+                        products to start
+                        building your
                         order.
                       </p>
 
@@ -716,7 +720,7 @@ export function Header() {
                     </div>
                   ) : (
                     <>
-                      {/* PRODUCTS */}
+                      {/* PRODUCT LIST */}
                       <div className="mt-2 space-y-1">
                         {previewItems.map(
                           (item) => (
@@ -724,9 +728,9 @@ export function Header() {
                               key={
                                 item.lineId
                               }
-                              className="flex gap-3 rounded-2xl border border-transparent bg-white/30 p-2.5 transition hover:border-white/80 hover:bg-white/70"
+                              className="flex gap-3 rounded-xl border border-transparent bg-white/30 p-2.5 transition hover:border-white/80 hover:bg-white/75 hover:shadow-sm"
                             >
-                              {/* PRODUCT IMAGE */}
+                              {/* IMAGE */}
                               <Link
                                 href={`/products/${item.productSlug}`}
                                 onClick={() =>
@@ -734,21 +738,23 @@ export function Header() {
                                     false
                                   )
                                 }
-                                className="h-[66px] w-[66px] shrink-0 overflow-hidden rounded-xl border border-neutral-200 bg-[#f7f6f2]"
+                                className="h-[64px] w-[64px] shrink-0 overflow-hidden rounded-xl border border-white/80 bg-white/55 shadow-sm"
                               >
                                 {item.imageUrl ? (
                                   <img
                                     src={
                                       item.imageUrl
                                     }
-                                    alt=""
+                                    alt={
+                                      item.productName
+                                    }
                                     className="h-full w-full object-cover"
                                   />
                                 ) : (
-                                  <div className="flex h-full w-full items-center justify-center text-neutral-300">
+                                  <div className="flex h-full w-full items-center justify-center text-neutral-400">
                                     <ShoppingBag
                                       size={
-                                        20
+                                        19
                                       }
                                     />
                                   </div>
@@ -764,7 +770,7 @@ export function Header() {
                                       false
                                     )
                                   }
-                                  className="block truncate text-sm font-semibold text-neutral-900 transition hover:text-[#17352c]"
+                                  className="block truncate text-sm font-semibold text-neutral-950 transition hover:text-[#17352c]"
                                 >
                                   {
                                     item.productName
@@ -772,7 +778,7 @@ export function Header() {
                                 </Link>
 
                                 {item.variantName && (
-                                  <p className="mt-1 truncate text-xs text-neutral-500">
+                                  <p className="mt-0.5 truncate text-xs text-neutral-500">
                                     {
                                       item.variantName
                                     }
@@ -800,10 +806,10 @@ export function Header() {
                         )}
                       </div>
 
-                      {/* MORE ITEMS */}
+                      {/* EXTRA PRODUCT COUNT */}
                       {hiddenProductCount >
                         0 && (
-                        <div className="px-3 py-2 text-center">
+                        <div className="mt-1 rounded-xl border border-transparent bg-white/30 px-3 py-2.5 text-center">
                           <p className="text-xs font-medium text-neutral-500">
                             +{" "}
                             {
@@ -820,37 +826,39 @@ export function Header() {
                       )}
 
                       {/* CART FOOTER */}
-                      <div className="mt-2 rounded-2xl border border-white/80 bg-white/60 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.95)]">
-                        <div className="flex items-center justify-between gap-4">
-                          <div>
-                            <p className="text-xs text-neutral-500">
-                              Subtotal
-                            </p>
+                      <div className="mt-2 border-t border-white/70 pt-2">
+                        <div className="rounded-2xl border border-white/80 bg-white/55 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.95)]">
+                          <div className="flex items-center justify-between gap-4">
+                            <div>
+                              <p className="text-xs font-medium text-neutral-500">
+                                Subtotal
+                              </p>
 
-                            <p className="mt-0.5 text-xs text-neutral-400">
-                              Before
-                              shipping
+                              <p className="mt-0.5 text-[11px] text-neutral-400">
+                                Before
+                                shipping
+                              </p>
+                            </div>
+
+                            <p className="text-base font-semibold tracking-[-0.02em] text-neutral-950">
+                              {formatMoney(
+                                subtotalCents
+                              )}
                             </p>
                           </div>
 
-                          <p className="text-base font-semibold tracking-[-0.02em] text-neutral-950">
-                            {formatMoney(
-                              subtotalCents
-                            )}
-                          </p>
+                          <Link
+                            href="/cart"
+                            onClick={() =>
+                              setCartOpen(
+                                false
+                              )
+                            }
+                            className="mt-4 flex h-11 w-full items-center justify-center rounded-xl bg-[#17352c] px-5 text-sm font-semibold text-white transition hover:bg-[#102a22]"
+                          >
+                            View cart
+                          </Link>
                         </div>
-
-                        <Link
-                          href="/cart"
-                          onClick={() =>
-                            setCartOpen(
-                              false
-                            )
-                          }
-                          className="mt-4 flex h-11 w-full items-center justify-center rounded-xl bg-[#17352c] px-5 text-sm font-semibold text-white transition hover:bg-[#102a22]"
-                        >
-                          View cart
-                        </Link>
                       </div>
                     </>
                   )}
