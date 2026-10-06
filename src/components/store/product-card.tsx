@@ -38,7 +38,8 @@ export function ProductCard({
   product: ProductCardProduct;
 }) {
   return (
-    <article className="group">
+    <article className="group flex h-full flex-col">
+      {/* PRODUCT IMAGE */}
       <div className="relative">
         <Link
           href={`/products/${product.slug}`}
@@ -58,11 +59,15 @@ export function ProductCard({
             )}
 
             <div className="absolute bottom-3 left-3 rounded-full bg-white px-3 py-1.5 text-xs font-medium shadow-sm">
-              MOQ {product.minimumOrderQuantity}
+              MOQ{" "}
+              {
+                product.minimumOrderQuantity
+              }
             </div>
           </div>
         </Link>
 
+        {/* SAVE */}
         <button
           type="button"
           aria-label="Save product"
@@ -78,25 +83,41 @@ export function ProductCard({
         </button>
       </div>
 
+      {/* PRODUCT INFORMATION */}
       <Link
         href={`/products/${product.slug}`}
-        className="block pt-4"
+        className="flex flex-1 flex-col pt-4"
       >
-        <p className="mb-1 text-xs font-medium uppercase tracking-[0.14em] text-neutral-500">
-          {product.categoryName ?? "Uncategorized"}
+        {/* CATEGORY */}
+        <p className="mb-1 min-h-4 truncate text-xs font-medium uppercase tracking-[0.14em] text-neutral-500">
+          {product.categoryName ??
+            "Uncategorized"}
         </p>
 
-        <h3 className="text-[15px] font-medium text-neutral-900 transition group-hover:underline">
+        {/* TITLE
+            Always reserves room for
+            exactly two lines.
+        */}
+        <h3 className="min-h-[40px] line-clamp-2 text-[15px] font-medium leading-5 text-neutral-900 transition group-hover:underline">
           {product.title}
         </h3>
 
-        {product.brand && (
-          <p className="mt-1 text-xs text-neutral-400">
-            {product.brand}
-          </p>
-        )}
+        {/* BRAND
+            Always reserves the same
+            vertical space, even if a
+            product has no brand.
+        */}
+        <p className="mt-1 min-h-4 truncate text-xs leading-4 text-neutral-400">
+          {product.brand ?? ""}
+        </p>
 
-        <div className="mt-3 flex items-end justify-between gap-3">
+        {/* PRICE / STOCK
+            mt-auto keeps this section
+            aligned at the bottom of
+            every product card.
+        */}
+        <div className="mt-auto flex items-end justify-between gap-3 pt-3">
+          {/* WHOLESALE */}
           <div>
             <p className="text-lg font-semibold">
               {formatMoney(
@@ -109,6 +130,7 @@ export function ProductCard({
             </p>
           </div>
 
+          {/* MSRP / STOCK */}
           <div className="text-right">
             <p className="text-xs text-neutral-500">
               MSRP{" "}
