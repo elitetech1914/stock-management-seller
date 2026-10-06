@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element */
+
 import Link from "next/link";
 import {
   ChevronDown,
@@ -15,7 +17,6 @@ import {
   X,
 } from "lucide-react";
 import {
-  type ReactNode,
   useEffect,
   useRef,
   useState,
@@ -32,8 +33,20 @@ type HeaderCategory = {
   slug: string;
 };
 
+function formatMoney(cents: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(cents / 100);
+}
+
 export function Header() {
-  const { totalItems } = useCart();
+  const {
+    items,
+    totalItems,
+    subtotalCents,
+  } = useCart();
+
   const { totalSaved } =
     useSavedProducts();
 
@@ -48,6 +61,11 @@ export function Header() {
   ] = useState(false);
 
   const [
+    cartOpen,
+    setCartOpen,
+  ] = useState(false);
+
+  const [
     mobileOpen,
     setMobileOpen,
   ] = useState(false);
@@ -55,9 +73,9 @@ export function Header() {
   const [
     categories,
     setCategories,
-  ] = useState<
-    HeaderCategory[]
-  >([]);
+  ] = useState<HeaderCategory[]>(
+    []
+  );
 
   const [
     canScrollLeft,
@@ -74,7 +92,7 @@ export function Header() {
       null
     );
 
-  const mobileMenuRef =
+  const cartRef =
     useRef<HTMLDivElement | null>(
       null
     );
@@ -85,7 +103,23 @@ export function Header() {
     );
 
   /*
-   * CLOSE FLOATING MENUS
+   * We show the 3 most recently
+   * added/updated cart lines.
+   */
+  const previewItems = items
+    .slice(-3)
+    .reverse();
+
+  const hiddenProductCount =
+    Math.max(
+      0,
+      items.length -
+        previewItems.length
+    );
+
+  /*
+   * Close account/cart dropdowns
+   * when clicking elsewhere.
    */
   useEffect(() => {
     function handleClickOutside(
@@ -104,23 +138,12 @@ export function Header() {
       }
 
       if (
-        mobileMenuRef.current &&
-        !mobileMenuRef.current.contains(
+        cartRef.current &&
+        !cartRef.current.contains(
           target
         )
       ) {
-        setMobileOpen(false);
-      }
-    }
-
-    function handleEscape(
-      event: KeyboardEvent
-    ) {
-      if (
-        event.key === "Escape"
-      ) {
-        setAccountOpen(false);
-        setMobileOpen(false);
+        setCartOpen(false);
       }
     }
 
@@ -129,26 +152,16 @@ export function Header() {
       handleClickOutside
     );
 
-    document.addEventListener(
-      "keydown",
-      handleEscape
-    );
-
     return () => {
       document.removeEventListener(
         "mousedown",
         handleClickOutside
       );
-
-      document.removeEventListener(
-        "keydown",
-        handleEscape
-      );
     };
   }, []);
 
   /*
-   * LOAD REAL CATEGORIES
+   * Load categories for header nav.
    */
   useEffect(() => {
     let cancelled = false;
@@ -171,7 +184,7 @@ export function Header() {
           setCategories(data);
         }
       } catch {
-        // Keep header usable
+        // Keep the header usable
         // if category loading fails.
       }
     }
@@ -184,7 +197,7 @@ export function Header() {
   }, []);
 
   /*
-   * DESKTOP CATEGORY CAROUSEL
+   * Category-nav scrolling.
    */
   useEffect(() => {
     const element =
@@ -243,9 +256,7 @@ export function Header() {
   }, [categories]);
 
   function scrollCategories(
-    direction:
-      | "left"
-      | "right"
+    direction: "left" | "right"
   ) {
     categoryNavRef.current?.scrollBy(
       {
@@ -253,19 +264,71 @@ export function Header() {
           direction === "right"
             ? 420
             : -420,
-
         behavior: "smooth",
       }
     );
   }
 
-  function closeMobileMenu() {
-    setMobileOpen(false);
+  /*
+   * Buyer login remembers the
+   * current page.
+   */
+  function handleBuyerSignIn(
+    event: React.MouseEvent<HTMLAnchorElement>
+  ) {
+    if (
+      event.ctrlKey ||
+      event.metaKey ||
+      event.shiftKey ||
+      event.altKey
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+
+    const pathname =
+      window.location.pathname;
+
+    const currentPage = `${pathname}${window.location.search}${window.location.hash}`;
+
+    const returnTo =
+      pathname === "/login" ||
+      pathname === "/register" ||
+      pathname ===
+        "/admin/login"
+        ? "/"
+        : currentPage;
+
+    const loginUrl =
+      `/login?next=${encodeURIComponent(
+        returnTo
+      )}`;
+
+    window.location.assign(
+      loginUrl
+    );
+  }
+
+  function handleAccountToggle() {
+    setCartOpen(false);
+
+    setAccountOpen(
+      (current) => !current
+    );
+  }
+
+  function handleCartToggle() {
+    setAccountOpen(false);
+
+    setCartOpen(
+      (current) => !current
+    );
   }
 
   async function handleSignOut() {
     setAccountOpen(false);
-    setMobileOpen(false);
+    setCartOpen(false);
 
     await authClient.signOut();
 
@@ -274,269 +337,36 @@ export function Header() {
 
   return (
     <>
-      {/* WHOLESALE BAR */}
       <div className="bg-[#17352c] px-4 py-2.5 text-center text-xs font-medium text-white">
-        Wholesale pricing for independent retailers
+        Wholesale pricing for
+        independent retailers
       </div>
 
-      <header className="relative z-50 border-b border-neutral-200 bg-white">
+      <header className="border-b border-neutral-200 bg-white">
         {/* MAIN HEADER */}
         <div className="mx-auto flex h-[76px] max-w-[1500px] items-center gap-5 px-5 lg:gap-7 lg:px-8">
           {/* MOBILE MENU */}
-          <div
-            ref={mobileMenuRef}
-            className="relative lg:hidden"
+          <button
+            type="button"
+            onClick={() =>
+              setMobileOpen(
+                (current) =>
+                  !current
+              )
+            }
+            className="flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-neutral-100 lg:hidden"
+            aria-label={
+              mobileOpen
+                ? "Close navigation"
+                : "Open navigation"
+            }
           >
-            <button
-              type="button"
-              onClick={() => {
-                setMobileOpen(
-                  (current) =>
-                    !current
-                );
-
-                setAccountOpen(false);
-              }}
-              className={`flex h-9 w-9 items-center justify-center rounded-full transition ${
-                mobileOpen
-                  ? "bg-neutral-100"
-                  : "hover:bg-neutral-100"
-              }`}
-              aria-label={
-                mobileOpen
-                  ? "Close navigation"
-                  : "Open navigation"
-              }
-              aria-expanded={
-                mobileOpen
-              }
-            >
-              {mobileOpen ? (
-                <X size={20} />
-              ) : (
-                <Menu size={21} />
-              )}
-            </button>
-
-            {/* FLOATING GLASS MOBILE MENU */}
-            {mobileOpen && (
-              <div
-                className="absolute left-0 top-[calc(100%+12px)] z-[200] w-[310px] max-w-[calc(100vw-30px)] overflow-y-auto rounded-[22px] border border-white/65 bg-white/45 p-2.5 shadow-[0_18px_50px_rgba(0,0,0,0.13)] backdrop-blur-[28px]"
-                style={{
-                  maxHeight:
-                    "calc(100vh - 120px)",
-                  scrollbarWidth:
-                    "none",
-                  msOverflowStyle:
-                    "none",
-                }}
-              >
-                {/* SEARCH */}
-                <form
-                  action="/products"
-                  method="GET"
-                  onSubmit={() =>
-                    setMobileOpen(
-                      false
-                    )
-                  }
-                  className="flex h-11 items-center rounded-2xl border border-white/70 bg-white/55 px-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.95)]"
-                >
-                  <Search
-                    size={16}
-                    className="shrink-0 text-neutral-400"
-                  />
-
-                  <input
-                    type="search"
-                    name="q"
-                    placeholder="Search products..."
-                    className="min-w-0 flex-1 bg-transparent px-3 text-sm text-neutral-800 outline-none placeholder:text-neutral-400"
-                  />
-                </form>
-
-                {/* MAIN LINKS */}
-                <div className="mt-2 space-y-1">
-                  <MobileMenuLink
-                    href="/products"
-                    onClick={
-                      closeMobileMenu
-                    }
-                  >
-                    All Products
-                  </MobileMenuLink>
-
-                  <MobileMenuLink
-                    href="/saved"
-                    onClick={
-                      closeMobileMenu
-                    }
-                    badge={
-                      totalSaved > 0
-                        ? String(
-                            totalSaved
-                          )
-                        : undefined
-                    }
-                  >
-                    Saved Products
-                  </MobileMenuLink>
-
-                  <MobileMenuLink
-                    href="/cart"
-                    onClick={
-                      closeMobileMenu
-                    }
-                    badge={
-                      totalItems > 0
-                        ? totalItems > 99
-                          ? "99+"
-                          : String(
-                              totalItems
-                            )
-                        : undefined
-                    }
-                  >
-                    Cart
-                  </MobileMenuLink>
-
-                  <MobileMenuLink
-                    href="/products?sort=newest"
-                    onClick={
-                      closeMobileMenu
-                    }
-                  >
-                    New Arrivals
-                  </MobileMenuLink>
-                </div>
-
-                {/* CATEGORIES */}
-                {categories.length >
-                  0 && (
-                  <>
-                    <GlassDivider />
-
-                    <p className="px-3 pb-1 pt-1 text-[9px] font-semibold uppercase tracking-[0.15em] text-neutral-400">
-                      Categories
-                    </p>
-
-                    <div className="space-y-1">
-                      {categories.map(
-                        (
-                          category
-                        ) => (
-                          <MobileMenuLink
-                            key={
-                              category.id
-                            }
-                            href={`/categories/${category.slug}`}
-                            onClick={
-                              closeMobileMenu
-                            }
-                          >
-                            {
-                              category.name
-                            }
-                          </MobileMenuLink>
-                        )
-                      )}
-                    </div>
-                  </>
-                )}
-
-                <GlassDivider />
-
-                {/* ACCOUNT */}
-                {!isPending &&
-                session?.user ? (
-                  <div className="space-y-1">
-                    <div className="mb-2 rounded-2xl border border-white/65 bg-white/40 px-3.5 py-3">
-                      <p className="truncate text-sm font-semibold text-neutral-950">
-                        {
-                          session.user
-                            .name
-                        }
-                      </p>
-
-                      <p className="mt-0.5 truncate text-[11px] text-neutral-500">
-                        {
-                          session.user
-                            .email
-                        }
-                      </p>
-                    </div>
-
-                    <MobileMenuLink
-                      href="/account"
-                      onClick={
-                        closeMobileMenu
-                      }
-                    >
-                      Account
-                    </MobileMenuLink>
-
-                    <MobileMenuLink
-                      href="/account/orders"
-                      onClick={
-                        closeMobileMenu
-                      }
-                    >
-                      My Orders
-                    </MobileMenuLink>
-
-                    {session.user
-                      .role ===
-                      "admin" && (
-                      <MobileMenuLink
-                        href="/admin"
-                        onClick={
-                          closeMobileMenu
-                        }
-                      >
-                        Admin Dashboard
-                      </MobileMenuLink>
-                    )}
-
-                    <button
-                      type="button"
-                      onClick={
-                        handleSignOut
-                      }
-                      className="flex w-full items-center gap-3 rounded-xl border border-transparent bg-white/10 px-3.5 py-2.5 text-left text-sm font-medium text-red-600 transition hover:border-red-100/60 hover:bg-white/55"
-                    >
-                      <LogOut
-                        size={15}
-                      />
-
-                      Sign out
-                    </button>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 gap-2">
-                    <Link
-                      href="/login"
-                      onClick={
-                        closeMobileMenu
-                      }
-                      className="flex h-10 items-center justify-center rounded-xl border border-white/70 bg-white/50 text-sm font-semibold text-neutral-800 transition hover:bg-white/75"
-                    >
-                      Sign in
-                    </Link>
-
-                    <Link
-                      href="/register"
-                      onClick={
-                        closeMobileMenu
-                      }
-                      className="flex h-10 items-center justify-center rounded-xl bg-[#17352c] text-sm font-semibold text-white shadow-sm transition hover:bg-[#24483d]"
-                    >
-                      Register
-                    </Link>
-                  </div>
-                )}
-              </div>
+            {mobileOpen ? (
+              <X size={21} />
+            ) : (
+              <Menu size={22} />
             )}
-          </div>
+          </button>
 
           {/* LOGO */}
           <Link
@@ -546,7 +376,7 @@ export function Header() {
             {siteConfig.name}
           </Link>
 
-          {/* DESKTOP SEARCH */}
+          {/* SEARCH */}
           <form
             action="/products"
             method="GET"
@@ -557,9 +387,7 @@ export function Header() {
               aria-label="Search products"
               className="flex shrink-0 items-center justify-center text-neutral-500"
             >
-              <Search
-                size={18}
-              />
+              <Search size={18} />
             </button>
 
             <input
@@ -579,11 +407,15 @@ export function Header() {
               Help
             </button>
 
+            {/* SIGN IN / REGISTER */}
             {!isPending &&
               !session?.user && (
                 <>
                   <Link
                     href="/login"
+                    onClick={
+                      handleBuyerSignIn
+                    }
                     className="hidden text-sm font-medium text-neutral-700 transition hover:text-neutral-950 md:block"
                   >
                     Sign in
@@ -598,7 +430,7 @@ export function Header() {
                 </>
               )}
 
-            {/* SAVED */}
+            {/* SAVED PRODUCTS */}
             <Link
               href="/saved"
               aria-label={
@@ -631,16 +463,9 @@ export function Header() {
                 <>
                   <button
                     type="button"
-                    onClick={() => {
-                      setAccountOpen(
-                        (current) =>
-                          !current
-                      );
-
-                      setMobileOpen(
-                        false
-                      );
-                    }}
+                    onClick={
+                      handleAccountToggle
+                    }
                     aria-label="Account menu"
                     aria-expanded={
                       accountOpen
@@ -662,8 +487,9 @@ export function Header() {
                   </button>
 
                   {accountOpen && (
-                    <div className="absolute right-0 top-[46px] z-[200] w-[270px] overflow-hidden rounded-[22px] border border-white/65 bg-white/45 p-2 shadow-[0_18px_50px_rgba(0,0,0,0.13)] backdrop-blur-[28px]">
-                      <div className="rounded-2xl border border-white/65 bg-white/45 px-4 py-3.5">
+                    <div className="absolute right-0 top-[46px] z-[100] w-[270px] overflow-hidden rounded-[22px] border border-white/80 bg-white/70 p-2 shadow-[0_28px_80px_rgba(0,0,0,0.18)] backdrop-blur-2xl">
+                      {/* USER */}
+                      <div className="rounded-2xl border border-white/80 bg-white/55 px-4 py-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.95)]">
                         <p className="truncate text-sm font-semibold text-neutral-950">
                           {
                             session.user
@@ -728,18 +554,19 @@ export function Header() {
                               />
                             }
                           >
-                            Admin dashboard
+                            Admin
+                            dashboard
                           </GlassAccountLink>
                         )}
                       </div>
 
-                      <div className="mt-2 border-t border-white/60 pt-2">
+                      <div className="mt-2 border-t border-white/70 pt-2">
                         <button
                           type="button"
                           onClick={
                             handleSignOut
                           }
-                          className="flex w-full items-center gap-3 rounded-xl border border-transparent px-3 py-2.5 text-left text-sm font-medium text-red-600 transition hover:border-red-100 hover:bg-white/55"
+                          className="flex w-full items-center gap-3 rounded-xl border border-transparent px-3 py-2.5 text-left text-sm font-medium text-red-600 transition hover:border-red-100 hover:bg-white/75"
                         >
                           <LogOut
                             size={16}
@@ -754,6 +581,9 @@ export function Header() {
               ) : (
                 <Link
                   href="/login"
+                  onClick={
+                    handleBuyerSignIn
+                  }
                   aria-label="Sign in"
                   className="flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-neutral-100 md:hidden"
                 >
@@ -765,33 +595,275 @@ export function Header() {
             </div>
 
             {/* CART */}
-            <Link
-              href="/cart"
-              className="relative flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-neutral-100"
-              aria-label={
-                totalItems > 0
-                  ? `Shopping cart with ${totalItems} items`
-                  : "Shopping cart"
-              }
+            <div
+              ref={cartRef}
+              className="relative"
             >
-              <ShoppingBag
-                size={21}
-              />
+              {/* DESKTOP CART BUTTON */}
+              <button
+                type="button"
+                onClick={
+                  handleCartToggle
+                }
+                aria-expanded={
+                  cartOpen
+                }
+                aria-label={
+                  totalItems > 0
+                    ? `Shopping cart with ${totalItems} items`
+                    : "Shopping cart"
+                }
+                className="relative hidden h-9 w-9 items-center justify-center rounded-full transition hover:bg-neutral-100 md:flex"
+              >
+                <ShoppingBag
+                  size={21}
+                />
 
-              {totalItems > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#17352c] px-1 text-[9px] font-semibold leading-none text-white">
-                  {totalItems > 99
-                    ? "99+"
-                    : totalItems}
-                </span>
+                {totalItems > 0 && (
+                  <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#17352c] px-1 text-[9px] font-semibold leading-none text-white">
+                    {totalItems > 99
+                      ? "99+"
+                      : totalItems}
+                  </span>
+                )}
+              </button>
+
+              {/* MOBILE CART */}
+              <Link
+                href="/cart"
+                aria-label={
+                  totalItems > 0
+                    ? `Shopping cart with ${totalItems} items`
+                    : "Shopping cart"
+                }
+                className="relative flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-neutral-100 md:hidden"
+              >
+                <ShoppingBag
+                  size={21}
+                />
+
+                {totalItems > 0 && (
+                  <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#17352c] px-1 text-[9px] font-semibold leading-none text-white">
+                    {totalItems > 99
+                      ? "99+"
+                      : totalItems}
+                  </span>
+                )}
+              </Link>
+
+              {/* MINI CART */}
+              {cartOpen && (
+                <div className="absolute right-0 top-[46px] z-[110] hidden w-[380px] overflow-hidden rounded-[24px] border border-white/80 bg-white/80 p-2 shadow-[0_28px_90px_rgba(0,0,0,0.20)] backdrop-blur-2xl md:block">
+                  {/* CART HEADER */}
+                  <div className="flex items-center justify-between rounded-2xl border border-white/80 bg-white/55 px-4 py-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.95)]">
+                    <div>
+                      <p className="text-sm font-semibold text-neutral-950">
+                        Your cart
+                      </p>
+
+                      <p className="mt-0.5 text-xs text-neutral-500">
+                        {totalItems ===
+                        0
+                          ? "No items yet"
+                          : `${totalItems} ${
+                              totalItems ===
+                              1
+                                ? "item"
+                                : "items"
+                            }`}
+                      </p>
+                    </div>
+
+                    <ShoppingBag
+                      size={18}
+                      className="text-neutral-500"
+                    />
+                  </div>
+
+                  {items.length === 0 ? (
+                    /* EMPTY CART */
+                    <div className="px-5 py-8 text-center">
+                      <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-neutral-100 text-neutral-500">
+                        <ShoppingBag
+                          size={19}
+                        />
+                      </div>
+
+                      <p className="mt-4 text-sm font-semibold text-neutral-900">
+                        Your cart is
+                        empty
+                      </p>
+
+                      <p className="mx-auto mt-1.5 max-w-[240px] text-xs leading-5 text-neutral-500">
+                        Browse the
+                        wholesale
+                        catalog and add
+                        products to your
+                        order.
+                      </p>
+
+                      <Link
+                        href="/products"
+                        onClick={() =>
+                          setCartOpen(
+                            false
+                          )
+                        }
+                        className="mt-5 inline-flex h-10 items-center justify-center rounded-xl bg-[#17352c] px-5 text-sm font-semibold text-white transition hover:bg-[#102a22]"
+                      >
+                        Browse products
+                      </Link>
+                    </div>
+                  ) : (
+                    <>
+                      {/* PRODUCTS */}
+                      <div className="mt-2 space-y-1">
+                        {previewItems.map(
+                          (item) => (
+                            <div
+                              key={
+                                item.lineId
+                              }
+                              className="flex gap-3 rounded-2xl border border-transparent bg-white/30 p-2.5 transition hover:border-white/80 hover:bg-white/70"
+                            >
+                              {/* PRODUCT IMAGE */}
+                              <Link
+                                href={`/products/${item.productSlug}`}
+                                onClick={() =>
+                                  setCartOpen(
+                                    false
+                                  )
+                                }
+                                className="h-[66px] w-[66px] shrink-0 overflow-hidden rounded-xl border border-neutral-200 bg-[#f7f6f2]"
+                              >
+                                {item.imageUrl ? (
+                                  <img
+                                    src={
+                                      item.imageUrl
+                                    }
+                                    alt=""
+                                    className="h-full w-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="flex h-full w-full items-center justify-center text-neutral-300">
+                                    <ShoppingBag
+                                      size={
+                                        20
+                                      }
+                                    />
+                                  </div>
+                                )}
+                              </Link>
+
+                              {/* PRODUCT INFO */}
+                              <div className="min-w-0 flex-1 py-0.5">
+                                <Link
+                                  href={`/products/${item.productSlug}`}
+                                  onClick={() =>
+                                    setCartOpen(
+                                      false
+                                    )
+                                  }
+                                  className="block truncate text-sm font-semibold text-neutral-900 transition hover:text-[#17352c]"
+                                >
+                                  {
+                                    item.productName
+                                  }
+                                </Link>
+
+                                {item.variantName && (
+                                  <p className="mt-1 truncate text-xs text-neutral-500">
+                                    {
+                                      item.variantName
+                                    }
+                                  </p>
+                                )}
+
+                                <div className="mt-2 flex items-center justify-between gap-3">
+                                  <span className="text-xs text-neutral-500">
+                                    Qty{" "}
+                                    {
+                                      item.quantity
+                                    }
+                                  </span>
+
+                                  <span className="text-xs font-semibold text-neutral-900">
+                                    {formatMoney(
+                                      item.priceCents *
+                                        item.quantity
+                                    )}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        )}
+                      </div>
+
+                      {/* MORE ITEMS */}
+                      {hiddenProductCount >
+                        0 && (
+                        <div className="px-3 py-2 text-center">
+                          <p className="text-xs font-medium text-neutral-500">
+                            +{" "}
+                            {
+                              hiddenProductCount
+                            }{" "}
+                            more{" "}
+                            {hiddenProductCount ===
+                            1
+                              ? "product"
+                              : "products"}{" "}
+                            in your cart
+                          </p>
+                        </div>
+                      )}
+
+                      {/* CART FOOTER */}
+                      <div className="mt-2 rounded-2xl border border-white/80 bg-white/60 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.95)]">
+                        <div className="flex items-center justify-between gap-4">
+                          <div>
+                            <p className="text-xs text-neutral-500">
+                              Subtotal
+                            </p>
+
+                            <p className="mt-0.5 text-xs text-neutral-400">
+                              Before
+                              shipping
+                            </p>
+                          </div>
+
+                          <p className="text-base font-semibold tracking-[-0.02em] text-neutral-950">
+                            {formatMoney(
+                              subtotalCents
+                            )}
+                          </p>
+                        </div>
+
+                        <Link
+                          href="/cart"
+                          onClick={() =>
+                            setCartOpen(
+                              false
+                            )
+                          }
+                          className="mt-4 flex h-11 w-full items-center justify-center rounded-xl bg-[#17352c] px-5 text-sm font-semibold text-white transition hover:bg-[#102a22]"
+                        >
+                          View cart
+                        </Link>
+                      </div>
+                    </>
+                  )}
+                </div>
               )}
-            </Link>
+            </div>
           </nav>
         </div>
 
         {/* DESKTOP CATEGORY NAV */}
         <div className="border-t border-neutral-100">
           <div className="mx-auto hidden h-[48px] max-w-[1500px] items-center gap-2 px-5 lg:flex lg:px-8">
+            {/* PREVIOUS */}
             <button
               type="button"
               onClick={() =>
@@ -810,6 +882,7 @@ export function Header() {
               />
             </button>
 
+            {/* CATEGORY TRACK */}
             <div
               ref={
                 categoryNavRef
@@ -847,6 +920,7 @@ export function Header() {
               </Link>
             </div>
 
+            {/* NEXT */}
             <button
               type="button"
               onClick={() =>
@@ -866,44 +940,66 @@ export function Header() {
             </button>
           </div>
         </div>
+
+        {/* MOBILE NAV */}
+        {mobileOpen && (
+          <div className="border-t border-neutral-200 bg-white px-5 py-5 lg:hidden">
+            <form
+              action="/products"
+              method="GET"
+              className="flex items-center rounded-xl border border-neutral-300 bg-neutral-50 px-3"
+            >
+              <Search
+                size={17}
+                className="text-neutral-400"
+              />
+
+              <input
+                type="search"
+                name="q"
+                placeholder="Search products..."
+                className="h-11 min-w-0 flex-1 bg-transparent px-3 text-sm outline-none"
+              />
+            </form>
+
+            <div className="mt-4 grid gap-1">
+              <Link
+                href="/products"
+                onClick={() =>
+                  setMobileOpen(
+                    false
+                  )
+                }
+                className="rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-neutral-50"
+              >
+                All Products
+              </Link>
+
+              {categories.map(
+                (category) => (
+                  <Link
+                    key={
+                      category.id
+                    }
+                    href={`/categories/${category.slug}`}
+                    onClick={() =>
+                      setMobileOpen(
+                        false
+                      )
+                    }
+                    className="rounded-lg px-3 py-2.5 text-sm text-neutral-700 hover:bg-neutral-50"
+                  >
+                    {
+                      category.name
+                    }
+                  </Link>
+                )
+              )}
+            </div>
+          </div>
+        )}
       </header>
     </>
-  );
-}
-
-function GlassDivider() {
-  return (
-    <div className="mx-2 my-2 h-px bg-white/60" />
-  );
-}
-
-function MobileMenuLink({
-  href,
-  onClick,
-  children,
-  badge,
-}: {
-  href: string;
-  onClick: () => void;
-  children: ReactNode;
-  badge?: string;
-}) {
-  return (
-    <Link
-      href={href}
-      onClick={onClick}
-      className="flex items-center justify-between gap-4 rounded-xl border border-transparent bg-white/10 px-3.5 py-2.5 text-sm font-medium text-neutral-700 transition hover:border-white/60 hover:bg-white/55 hover:text-neutral-950"
-    >
-      <span className="truncate">
-        {children}
-      </span>
-
-      {badge && (
-        <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-[#17352c] px-1.5 text-[9px] font-semibold text-white">
-          {badge}
-        </span>
-      )}
-    </Link>
   );
 }
 
@@ -915,14 +1011,14 @@ function GlassAccountLink({
 }: {
   href: string;
   onClick: () => void;
-  icon: ReactNode;
-  children: ReactNode;
+  icon: React.ReactNode;
+  children: React.ReactNode;
 }) {
   return (
     <Link
       href={href}
       onClick={onClick}
-      className="flex items-center gap-3 rounded-xl border border-transparent bg-white/10 px-3 py-2.5 text-sm font-medium text-neutral-700 transition hover:border-white/60 hover:bg-white/55 hover:text-neutral-950"
+      className="flex items-center gap-3 rounded-xl border border-transparent bg-white/30 px-3 py-2.5 text-sm font-medium text-neutral-700 transition hover:border-white/80 hover:bg-white/75 hover:text-neutral-950 hover:shadow-sm"
     >
       <span className="text-neutral-500">
         {icon}
