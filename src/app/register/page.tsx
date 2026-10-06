@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
-import { BuyerAuthForm } from "@/components/store/buyer-auth-form";
+import  BuyerAuthForm  from "@/components/store/buyer-auth-form";
 
 export const metadata: Metadata = {
   title: "Create Buyer Account | Stockmora",
