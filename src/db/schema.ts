@@ -6,9 +6,33 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
+
+// Media is independent of products: the original filename belongs to an import
+// batch, and remains available when a product is renamed or removed.
+export const importBatches = pgTable("import_batches", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  name: varchar("name", { length: 150 }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const mediaAssets = pgTable("media_assets", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  batchId: uuid("batch_id").notNull().references(() => importBatches.id, { onDelete: "restrict" }),
+  originalFilename: varchar("original_filename", { length: 255 }).notNull(),
+  objectKey: text("object_key").notNull().unique(),
+  mimeType: varchar("mime_type", { length: 50 }).notNull(),
+  sizeBytes: integer("size_bytes").notNull(),
+  width: integer("width").notNull(),
+  height: integer("height").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("media_assets_batch_filename_idx").on(table.batchId, table.originalFilename),
+  index("media_assets_batch_created_idx").on(table.batchId, table.createdAt, table.id),
+]);
 
 /*
  * =========================================================

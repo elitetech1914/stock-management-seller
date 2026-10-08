@@ -33,6 +33,8 @@ export default defineConfig({
     "product_variants",
     "orders",
     "order_items",
+    "import_batches",
+    "media_assets",
   ],
 
   verbose: true,

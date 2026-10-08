@@ -8,6 +8,7 @@ import {
   FolderTree,
   Grid2X2,
   Import,
+  Images,
   LogOut,
   Package,
   ShoppingCart,
@@ -38,6 +39,11 @@ const navigation = [
     label: "Import Products",
     href: "/admin/import",
     icon: Import,
+  },
+  {
+    label: "Bulk Images",
+    href: "/admin/bulk-images",
+    icon: Images,
   },
   {
     label: "Inventory",
