@@ -7,16 +7,15 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-
     "db:generate": "drizzle-kit generate --config=drizzle.config.ts",
     "db:migrate": "drizzle-kit migrate --config=drizzle.config.ts",
     "db:push": "drizzle-kit push --config=drizzle.config.ts",
     "db:check": "drizzle-kit check --config=drizzle.config.ts",
     "db:studio": "drizzle-kit studio --config=drizzle.config.ts",
-
     "auth:migrate": "npx auth@latest migrate --config ./src/lib/auth.ts --yes"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1148.0",
     "better-auth": "^1.7.5",
     "csv-parse": "^7.0.2",
     "drizzle-orm": "^0.45.2",
