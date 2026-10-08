@@ -126,6 +126,21 @@ test("admin mutations reject cross-origin requests", async () => {
   assert.equal(response.status, 403);
 });
 
+test("missing media tables produce a clear migration message without database details", async () => {
+  const { mediaErrorResponse } = loadSource("src/lib/media/admin.ts", { "@/lib/auth": { auth: {} } });
+  const error = new Error("Query parameters and sensitive database details");
+  error.cause = Object.assign(new Error('relation "import_batches" does not exist'), { code: "42P01" });
+  const response = mediaErrorResponse(error);
+  assert.equal(response.status, 503);
+  const body = await response.text();
+  assert.match(body, /database tables are missing/);
+  assert.ok(!body.includes("sensitive database"));
+  assert.ok(!body.includes("Query parameters"));
+  const cyclic = new Error("Unknown error");
+  cyclic.cause = cyclic;
+  assert.equal(mediaErrorResponse(cyclic).status, 503);
+});
+
 test("bounded reads enforce actual bytes, even with a missing or misleading Content-Length", async () => {
   const { readBoundedBody } = loadSource("src/lib/media/upload.ts", { "@/lib/auth": { auth: {} } });
   for (const headers of [{}, { "content-length": "1" }]) {

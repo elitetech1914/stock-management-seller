@@ -42,14 +42,24 @@ npm run db:media-status
 
 It reads table existence and checks exact migration hashes/timestamps without displaying database credentials or applying SQL. It does not perform a full schema drift audit.
 
-If it reports **initial migration recorded / media migration pending**, take a database backup, review `0001_media_upload_foundation.sql`, then apply the pending migration once:
+For a deployed store whose media tables are missing, preview the targeted migration:
 
 ```sh
-npm run db:migrate
+npm run db:media-migrate
+```
+
+After taking a database backup and reviewing `0001_media_upload_foundation.sql`, apply only that migration in the **Stockmora application terminal** in Coolify:
+
+```sh
+npm run db:media-migrate -- --apply
 npm run db:media-status
 ```
 
-If it reports **STOP**, do not run `db:migrate` or `db:push` blindly. For an existing unjournaled database, compare its commerce columns, types, defaults, foreign keys, unique constraints and indexes against the initial migration/snapshot, then establish the initial Drizzle migration baseline as a separately reviewed operation. Do not mark that baseline applied merely because the tables exist. For partially applied media tables or mismatched hashes, inspect the discrepancy before proceeding. No baseline operation or database migration has been executed as part of this change.
+The targeted command defaults to a read-only preview and requires `--apply` to write. It uses runtime PostgreSQL credentials and production dependencies; Drizzle Kit is not required in the running container. It creates only the two media tables, their constraints and indexes in one transaction, using a migration lock and SQL scope checks. It stops on partial media tables, missing commerce tables or unexpected migration history. If both media tables already exist, it does not replay their creation.
+
+When the initial migration is recorded correctly, the command also records the media migration in the existing Drizzle journal in that transaction. When commerce exists with an empty or absent journal (such as a previous `db:push` setup), it can still add these independent media tables safely; it leaves the legacy journal unchanged rather than pretending to have verified/applied the commerce baseline. This selective application is intentionally separate from the general migration runner.
+
+Before subsequently using general `db:migrate` on an unjournaled store, compare its commerce columns, types, defaults, foreign keys, unique constraints and indexes against the initial migration/snapshot, establish that baseline as a separately reviewed operation, and record the already-applied media migration after verifying its schema. Do not run `db:migrate` blindly: it would try to recreate existing tables. For **STOP**, partial tables or mismatched hashes, inspect the discrepancy before proceeding. No production migration or baseline operation has been executed from this workspace.
 
 On a **fresh dedicated development database**, the normal migration command can create commerce and media tables. Better Auth initialization remains separate and follows the existing project's setup. Never use production as the disposable local test database.
 
@@ -57,7 +67,7 @@ On a **fresh dedicated development database**, the normal migration command can 
 
 Keep the existing Railpack deployment, build `npm run build`, start `npm run start`, bucket, private Docker networking and six runtime S3 variables. Keep `BETTER_AUTH_URL` equal to the application's public origin so cookie authentication and mutation origin checks agree. No new environment variables, public Garage ports, domains or other Coolify services are needed. Install the normal production dependencies including Sharp's platform binaries; do not omit optional dependencies during installation.
 
-Apply the reviewed migration separately before using Bulk Images. Without the media tables or runtime storage configuration, the new APIs return a configuration/migration error while the existing commerce pages continue using their existing tables.
+Apply the reviewed migration separately before using Bulk Images. Without the media tables, the admin APIs report a specific missing-table error. Opening the tab lists database batches and does not access Garage, so an initial batch-list error should be diagnosed against the database first. Uploading additionally requires the runtime storage configuration. Existing commerce pages continue using their existing tables.
 
 ## Local verification
 
@@ -93,5 +103,6 @@ The production build and TypeScript check pass. Repository-wide lint currently h
 - `src/app/media/[id]/[filename]/route.ts`: public read-only image delivery.
 - `src/lib/media/{admin,image,shared,storage,upload}.ts`: authorization, validation/processing, common types/limits, Garage access and bounded uploads.
 - `src/db/schema.ts`, `drizzle.config.ts`, `drizzle/0001_media_upload_foundation.sql`, `drizzle/meta/*`: additive media schema/migration.
-- `scripts/check-media-migration.mjs`, `tests/media.test.mjs`, `package.json`, `package-lock.json`: read-only migration status, focused verification and explicit Sharp/server-only dependencies.
+- `scripts/check-media-migration.mjs`, `scripts/media-migration-plan.mjs`, `scripts/migrate-media.mjs`: read-only migration status/planning and opt-in application of only the media migration.
+- `tests/media.test.mjs`, `tests/media-migration.test.mjs`, `package.json`, `package-lock.json`: focused verification and explicit Sharp/server-only dependencies.
 - `docs/product-media.md`: rollout and continuation notes.

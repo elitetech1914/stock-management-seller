@@ -20,7 +20,21 @@ export async function requireMediaAdmin(request: Request) {
 
 export function mediaErrorResponse(error: unknown) {
   const known = error instanceof MediaRequestError;
-  return Response.json({ error: known ? error.message : "Media operation failed. Check database migration and storage configuration, then retry." }, {
+  let message = known ? error.message : "Media operation failed. Check database migration and storage configuration, then retry.";
+  // Drizzle wraps PostgreSQL errors in `cause`. Inspect without exposing SQL,
+  // parameters or database credentials to the client.
+  const visited = new Set<unknown>();
+  let cause = error;
+  while (!known && cause && typeof cause === "object" && !visited.has(cause)) {
+    visited.add(cause);
+    const value = cause as { code?: string; message?: string; cause?: unknown };
+    if (value.code === "42P01" && typeof value.message === "string" && /\b(import_batches|media_assets)\b/.test(value.message)) {
+      message = "Bulk Images database tables are missing. Apply the media database migration, then reload this page.";
+      break;
+    }
+    cause = value.cause;
+  }
+  return Response.json({ error: message }, {
     status: known ? error.status : 503,
     headers: { "Cache-Control": "no-store" },
   });
