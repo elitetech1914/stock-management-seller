@@ -13,7 +13,7 @@ export default async function NewProductPage() {
     .orderBy(asc(categories.name));
 
   return (
-    <div className="p-8 lg:p-10">
+    <div className="p-4 sm:p-6 lg:p-8 2xl:p-10">
       <Link
         href="/admin/products"
         className="inline-flex items-center gap-2 text-sm font-medium text-neutral-500 transition hover:text-black"
@@ -27,7 +27,7 @@ export default async function NewProductPage() {
           Catalog
         </p>
 
-        <h1 className="mt-1 text-4xl font-semibold tracking-[-0.05em]">
+        <h1 className="mt-1 text-3xl font-semibold sm:text-4xl tracking-[-0.05em]">
           Add product
         </h1>
 
@@ -38,10 +38,10 @@ export default async function NewProductPage() {
 
       <form
         action={createProduct}
-        className="mt-10 grid gap-6 xl:grid-cols-[1fr_360px]"
+        className="mt-10 grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]"
       >
         <div className="space-y-6">
-          <section className="rounded-2xl border border-neutral-200 bg-white p-6">
+          <section className="rounded-2xl border border-neutral-200 bg-white p-4 sm:p-6">
             <h2 className="font-semibold">
               Product information
             </h2>
@@ -118,7 +118,7 @@ export default async function NewProductPage() {
             </div>
           </section>
 
-          <section className="rounded-2xl border border-neutral-200 bg-white p-6">
+          <section className="rounded-2xl border border-neutral-200 bg-white p-4 sm:p-6">
             <h2 className="font-semibold">
               Pricing
             </h2>
@@ -158,7 +158,7 @@ export default async function NewProductPage() {
             </div>
           </section>
 
-          <section className="rounded-2xl border border-neutral-200 bg-white p-6">
+          <section className="rounded-2xl border border-neutral-200 bg-white p-4 sm:p-6">
             <h2 className="font-semibold">
               Images
             </h2>
@@ -179,7 +179,7 @@ export default async function NewProductPage() {
         </div>
 
         <div className="space-y-6">
-          <section className="rounded-2xl border border-neutral-200 bg-white p-6">
+          <section className="rounded-2xl border border-neutral-200 bg-white p-4 sm:p-6">
             <h2 className="font-semibold">
               Inventory
             </h2>

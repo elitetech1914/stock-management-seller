@@ -116,7 +116,7 @@ export function ProductCard({
             aligned at the bottom of
             every product card.
         */}
-        <div className="mt-auto flex items-end justify-between gap-3 pt-3">
+        <div className="mt-auto flex flex-wrap items-end justify-between gap-x-3 gap-y-2 pt-3">
           {/* WHOLESALE */}
           <div>
             <p className="text-lg font-semibold">

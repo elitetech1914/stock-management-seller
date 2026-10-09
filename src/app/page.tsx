@@ -8,7 +8,6 @@ import {
   RefreshCcw,
 } from "lucide-react";
 
-import { Header } from "@/components/site/header";
 import { ProductCard } from "@/components/store/product-card";
 import { getStoreProducts } from "@/lib/store-products";
 
@@ -29,16 +28,14 @@ export default async function Home() {
     await getStoreProducts(8);
   return (
     <main className="min-h-screen bg-white text-[#151515]">
-      <Header />
-
-      <section className="mx-auto max-w-[1500px] px-5 py-5 lg:px-8">
+      <section className="mx-auto max-w-[1500px] px-4 sm:px-6 py-5 lg:px-8">
         <div className="grid min-h-[540px] overflow-hidden rounded-[28px] bg-[#e8e1d3] lg:grid-cols-2">
-          <div className="flex flex-col justify-center px-7 py-14 sm:px-12 lg:px-16">
+          <div className="flex flex-col justify-center px-5 py-10 sm:px-12 sm:py-14 lg:px-16">
             <p className="mb-5 text-xs font-semibold uppercase tracking-[0.18em] text-[#4d625b]">
               Wholesale for modern retailers
             </p>
 
-            <h1 className="max-w-xl text-[46px] font-semibold leading-[0.98] tracking-[-0.055em] sm:text-[60px] lg:text-[70px]">
+            <h1 className="max-w-xl text-[clamp(2.25rem,8vw,2.875rem)] font-semibold leading-[0.98] tracking-[-0.055em] sm:text-[60px] lg:text-[70px]">
               Products worth putting on your shelves.
             </h1>
 
@@ -66,7 +63,7 @@ export default async function Home() {
             </div>
           </div>
 
-          <div className="relative min-h-[400px] overflow-hidden bg-[#c9d2c6]">
+          <div className="relative min-h-[280px] sm:min-h-[400px] overflow-hidden bg-[#c9d2c6]">
             <div className="absolute left-[10%] top-[16%] h-[230px] w-[190px] rotate-[-7deg] rounded-[80px_80px_32px_32px] bg-[#e8ddd2] shadow-2xl" />
 
             <div className="absolute right-[14%] top-[20%] h-[250px] w-[210px] rotate-[6deg] rounded-[22px] bg-[#b08c63] shadow-2xl" />
@@ -84,7 +81,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-[1500px] px-5 py-12 lg:px-8">
+      <section className="mx-auto max-w-[1500px] px-4 sm:px-6 py-12 lg:px-8">
         <div className="mb-7 flex items-end justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
@@ -140,7 +137,7 @@ export default async function Home() {
       </section>
 
       <section className="border-y border-neutral-200 bg-[#faf9f6]">
-        <div className="mx-auto grid max-w-[1500px] gap-6 px-5 py-9 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
+        <div className="mx-auto grid max-w-[1500px] gap-6 px-4 sm:px-6 py-9 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
           <Benefit
             icon={<BadgeCheck size={22} />}
             title="Wholesale pricing"
@@ -167,7 +164,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-[1500px] px-5 py-14 lg:px-8">
+      <section className="mx-auto max-w-[1500px] px-4 sm:px-6 py-14 lg:px-8">
         <div className="mb-8 flex items-end justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
@@ -188,15 +185,15 @@ export default async function Home() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4">
+        <div className="grid grid-cols-2 gap-x-3 sm:gap-x-4 gap-y-10 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4">
           {products.map((product) => (
             <ProductCard product={product} key={product.id} />
           ))}
         </div>
       </section>
 
-      <section className="mx-auto max-w-[1500px] px-5 pb-16 lg:px-8">
-        <div className="rounded-[28px] bg-[#17352c] px-7 py-14 text-white sm:px-12 lg:flex lg:items-center lg:justify-between lg:px-16">
+      <section className="mx-auto max-w-[1500px] px-4 pb-16 sm:px-6 lg:px-8">
+        <div className="rounded-[28px] bg-[#17352c] px-5 py-10 sm:py-14 text-white sm:px-12 lg:flex lg:items-center lg:justify-between lg:px-16">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/60">
               Buying for your business?
@@ -218,7 +215,7 @@ export default async function Home() {
       </section>
 
       <footer className="border-t border-neutral-200">
-        <div className="mx-auto flex max-w-[1500px] flex-col gap-5 px-5 py-10 text-sm text-neutral-500 sm:flex-row sm:items-center sm:justify-between lg:px-8">
+        <div className="mx-auto flex max-w-[1500px] flex-col gap-5 px-4 sm:px-6 py-10 text-sm text-neutral-500 sm:flex-row sm:items-center sm:justify-between lg:px-8">
           <div>
             <p className="text-xl font-semibold tracking-[-0.04em] text-black">
               Stockmora

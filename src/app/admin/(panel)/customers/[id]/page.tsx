@@ -204,7 +204,7 @@ export default async function AdminCustomerDetailPage({
     null;
 
   return (
-    <div className="mx-auto w-full max-w-[1450px] px-6 py-5 lg:px-8">
+    <div className="mx-auto w-full max-w-[1450px] px-4 py-5 sm:px-6 lg:px-8">
       {/* BACK */}
       <Link
         href="/admin/customers"

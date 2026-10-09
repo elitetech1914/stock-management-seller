@@ -2,7 +2,6 @@ import {
   notFound,
 } from "next/navigation";
 
-import { Header } from "@/components/site/header";
 import { ProductCard } from "@/components/store/product-card";
 import {
   getStoreCatalogProducts,
@@ -68,9 +67,7 @@ export default async function CategoryPage({
 
   return (
     <main className="min-h-screen bg-white">
-      <Header />
-
-      <section className="mx-auto max-w-[1500px] px-5 py-8 lg:px-8 lg:py-10">
+      <section className="mx-auto max-w-[1500px] px-4 sm:px-6 py-8 lg:px-8 lg:py-10">
         <div className="flex flex-col gap-5 border-b border-neutral-200 pb-7 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-neutral-400">
@@ -89,12 +86,12 @@ export default async function CategoryPage({
             </p>
           </div>
 
-          <form method="GET">
+          <form method="GET" className="flex min-w-0 items-center gap-2">
             <select
               name="sort"
               defaultValue={sort}
               onChange={undefined}
-              className="h-10 rounded-lg border border-neutral-200 bg-white px-3 text-sm outline-none"
+              className="h-11 min-w-0 flex-1 rounded-lg border border-neutral-200 bg-white px-3 text-sm outline-none"
             >
               <option value="newest">
                 Newest
@@ -115,7 +112,7 @@ export default async function CategoryPage({
 
             <button
               type="submit"
-              className="ml-2 h-10 rounded-lg border border-neutral-200 bg-neutral-50 px-4 text-sm font-medium transition hover:bg-neutral-100"
+              className="h-11 shrink-0 rounded-lg border border-neutral-200 bg-neutral-50 px-4 text-sm font-medium transition hover:bg-neutral-100"
             >
               Sort
             </button>
@@ -136,7 +133,7 @@ export default async function CategoryPage({
             </p>
           </div>
         ) : (
-          <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-9 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          <div className="mt-8 grid grid-cols-2 gap-x-3 sm:gap-x-4 gap-y-9 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {products.map(
               (product) => (
                 <ProductCard

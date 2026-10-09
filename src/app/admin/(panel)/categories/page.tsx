@@ -19,7 +19,7 @@ export default async function CategoriesPage() {
     .orderBy(asc(categories.name));
 
   return (
-    <div className="p-8 lg:p-10">
+    <div className="p-4 sm:p-6 lg:p-8 2xl:p-10">
       {/* HEADER */}
       <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
         <div>
@@ -27,7 +27,7 @@ export default async function CategoriesPage() {
             Catalog
           </p>
 
-          <h1 className="mt-1 text-4xl font-semibold tracking-[-0.05em]">
+          <h1 className="mt-1 text-3xl font-semibold sm:text-4xl tracking-[-0.05em]">
             Categories
           </h1>
 
@@ -115,7 +115,7 @@ export default async function CategoriesPage() {
         </section>
 
         {/* RIGHT — ADD CATEGORY */}
-        <section className="self-start rounded-2xl border border-neutral-200 bg-white p-6">
+        <section className="self-start rounded-2xl border border-neutral-200 bg-white p-4 sm:p-6">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#eef2ef] text-[#17352c]">
               <Plus size={19} />

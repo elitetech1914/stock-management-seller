@@ -39,7 +39,7 @@ export default function AdminLoginPage() {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#f6f5f1] px-5">
-      <div className="w-full max-w-md rounded-[28px] border border-neutral-200 bg-white p-8 shadow-sm sm:p-10">
+      <div className="w-full max-w-md rounded-[28px] border border-neutral-200 bg-white p-5 shadow-sm sm:p-10">
         <div className="mb-8">
           <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#17352c] text-white">
             <LockKeyhole size={21} />

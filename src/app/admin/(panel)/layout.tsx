@@ -25,12 +25,10 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-[#f7f7f5]">
-      <div className="sticky top-0 h-screen shrink-0">
-        <AdminSidebar />
-      </div>
+    <div className="admin-shell min-h-screen bg-[#f7f7f5] xl:flex">
+      <AdminSidebar />
 
-      <main className="min-w-0 flex-1">
+      <main className="admin-content min-w-0 flex-1">
         {children}
       </main>
     </div>

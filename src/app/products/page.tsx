@@ -1,4 +1,3 @@
-import { Header } from "@/components/site/header";
 import { CatalogFilters } from "@/components/store/catalog-filters";
 import { ProductCard } from "@/components/store/product-card";
 
@@ -62,9 +61,7 @@ export default async function ProductsPage({
 
   return (
     <main className="min-h-screen bg-white">
-      <Header />
-
-      <section className="mx-auto max-w-[1500px] px-5 py-8 lg:px-8 lg:py-10">
+      <section className="mx-auto max-w-[1500px] px-4 sm:px-6 py-8 lg:px-8 lg:py-10">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-neutral-400">
             Wholesale catalog
@@ -108,7 +105,7 @@ export default async function ProductsPage({
             </p>
           </div>
         ) : (
-          <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-9 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          <div className="mt-8 grid grid-cols-2 gap-x-3 sm:gap-x-4 gap-y-9 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {products.map(
               (product) => (
                 <ProductCard

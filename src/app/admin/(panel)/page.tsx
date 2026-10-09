@@ -422,7 +422,7 @@ export default async function AdminDashboardPage() {
   ].slice(0, 5);
 
   return (
-    <div className="mx-auto w-full max-w-[1500px] px-6 py-5 lg:px-8">
+    <div className="mx-auto w-full max-w-[1500px] px-4 py-5 sm:px-6 lg:px-8">
       {/* HEADER */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>

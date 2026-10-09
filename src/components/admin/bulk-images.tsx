@@ -5,6 +5,7 @@
 import { useEffect, useRef, useState } from "react";
 import { CheckCircle2, Copy, ImagePlus, Loader2, UploadCloud, X } from "lucide-react";
 
+import { BatchSelect } from "@/components/admin/batch-select";
 import { MAX_IMAGE_BYTES, MAX_UPLOAD_SELECTION, UPLOAD_CONCURRENCY, type MediaAssetView } from "@/lib/media/shared";
 
 type Batch = { id: string; name: string; createdAt: string };
@@ -188,16 +189,23 @@ export function BulkImages() {
       {error && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">{error}</div>}
       {notice && <p role="status" className="rounded-xl bg-neutral-100 px-5 py-4 text-sm text-neutral-700">{notice}</p>}
 
-      <section className="rounded-2xl border border-neutral-200 bg-white p-6">
+      <section className="rounded-2xl border border-neutral-200 bg-white p-4 sm:p-6">
         <h2 className="font-semibold">Import batch</h2>
         <p className="mt-1 text-sm leading-6 text-neutral-500">Use a separate batch for each supplier delivery, even when filenames repeat.</p>
         <div className="mt-5 grid gap-5 xl:grid-cols-2">
           <div>
-            <label htmlFor="media-batch" className="mb-2 block text-sm font-medium">Select batch</label>
-            <select id="media-batch" value={batchId} disabled={busy || creating || loading} onChange={(event) => selectBatch(event.target.value)} className={`${fieldClass} w-full`}>
-              <option value="">Create a batch to get started</option>
-              {batches.map((batch) => <option key={batch.id} value={batch.id}>{batch.name} · {batch.createdAt.slice(0, 10)} · {batch.id.slice(0, 8)}</option>)}
-            </select>
+            <label id="media-batch-label" htmlFor="media-batch" className="mb-2 block text-sm font-medium">Select batch</label>
+            <BatchSelect
+              id="media-batch"
+              labelledBy="media-batch-label"
+              value={batchId}
+              disabled={busy || creating || loading}
+              onChange={selectBatch}
+              options={[
+                { value: "", label: "Create a batch to get started" },
+                ...batches.map((batch) => ({ value: batch.id, label: `${batch.name} · ${batch.createdAt.slice(0, 10)} · ${batch.id.slice(0, 8)}` })),
+              ]}
+            />
             {batchCursor && <button type="button" disabled={busy || creating || loading} onClick={loadOlderBatches} className="mt-2 text-sm font-medium text-[#17352c] disabled:opacity-50">Load older batches</button>}
           </div>
           <form onSubmit={createBatch}>
@@ -210,7 +218,7 @@ export function BulkImages() {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-neutral-200 bg-white p-6">
+      <section className="rounded-2xl border border-neutral-200 bg-white p-4 sm:p-6">
         <h2 className="font-semibold">Upload images</h2>
         <p className="mt-1 text-sm leading-6 text-neutral-500">JPG, PNG and WebP · 10 MiB per file · up to 25 megapixels · no animation</p>
         <div onDragOver={(event) => { event.preventDefault(); if (batchId && !busy) setDragging(true); }}
@@ -227,7 +235,7 @@ export function BulkImages() {
         {!!uploads.length && <>
           <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
             <p role="status" className="text-sm text-neutral-500">{succeeded} uploaded · {queued} queued · {failed} failed</p>
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3">
               <button type="button" disabled={busy} onClick={() => setUploads([])} className="text-sm font-medium text-neutral-600 disabled:opacity-50">Clear list</button>
               <button type="button" onClick={uploadFiles} disabled={busy || !queued || loading || creating} className={buttonClass}>
                 {busy ? <Loader2 size={16} className="animate-spin" /> : <UploadCloud size={16} />}{busy ? "Uploading…" : `Upload ${queued} images`}
@@ -251,8 +259,8 @@ export function BulkImages() {
         </>}
       </section>
 
-      <section className="rounded-2xl border border-neutral-200 bg-white p-6">
-        <div className="flex items-center justify-between gap-4">
+      <section className="rounded-2xl border border-neutral-200 bg-white p-4 sm:p-6">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <div><h2 className="font-semibold">Batch library</h2><p className="mt-1 text-sm text-neutral-500">Uploaded catalog images have public read-only URLs. Copy a URL into a product’s Image URLs field to use it now.</p></div>
           <button type="button" disabled={!batchId || busy || loading} onClick={() => loadAssets()} className="text-sm font-medium text-[#17352c] disabled:opacity-50">Refresh</button>
         </div>

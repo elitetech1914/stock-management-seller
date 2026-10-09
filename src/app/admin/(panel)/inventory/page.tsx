@@ -357,7 +357,7 @@ export default async function InventoryPage({
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1500px] px-6 py-5 lg:px-8">
+    <div className="mx-auto w-full max-w-[1500px] px-4 py-5 sm:px-6 lg:px-8">
       {/* HEADER */}
       <div>
         <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-400">

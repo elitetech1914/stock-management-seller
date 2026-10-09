@@ -322,7 +322,7 @@ export function ProductDetail({
             {/* THUMBNAILS */}
             {product.images.length >
               1 && (
-              <div className="order-2 flex gap-2 overflow-x-auto md:order-1 md:flex-col">
+              <div className="order-2 flex min-w-0 gap-2 overflow-x-auto md:order-1 md:flex-col">
                 {product.images
                   .slice(0, 6)
                   .map(
@@ -374,7 +374,7 @@ export function ProductDetail({
                   : "md:col-span-2"
               }`}
             >
-              <div className="relative h-[460px] w-full overflow-hidden rounded-2xl bg-[#f3f2ee] lg:h-[500px]">
+              <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-[#f3f2ee] sm:aspect-auto sm:h-[460px] lg:h-[500px]">
                 {mainImage ? (
                   <img
                     src={
@@ -478,7 +478,7 @@ export function ProductDetail({
             </div>
 
             {/* SKU + STOCK */}
-            <div className="mt-4 flex items-center gap-5 border-y border-neutral-200 py-3 text-xs">
+            <div className="mt-4 flex flex-wrap items-center gap-3 border-y border-neutral-200 py-3 text-xs sm:gap-5">
               <div>
                 <span className="text-neutral-400">
                   SKU
@@ -586,8 +586,8 @@ export function ProductDetail({
             )}
 
             {/* MOQ + CASE + QUANTITY */}
-            <div className="mt-5 grid grid-cols-[1fr_1fr_auto] overflow-hidden rounded-xl border border-neutral-200">
-              <div className="border-r border-neutral-200 px-4 py-3">
+            <div className="mt-5 grid grid-cols-2 overflow-hidden rounded-xl border border-neutral-200 sm:grid-cols-[1fr_1fr_auto]">
+              <div className="border-r border-neutral-200 px-3 py-3 sm:px-4">
                 <p className="whitespace-nowrap text-[10px] font-medium uppercase tracking-wide text-neutral-400">
                   Minimum order
                 </p>
@@ -600,7 +600,7 @@ export function ProductDetail({
                 </p>
               </div>
 
-              <div className="border-r border-neutral-200 px-4 py-3">
+              <div className="px-3 py-3 sm:border-r sm:border-neutral-200 sm:px-4">
                 <p className="whitespace-nowrap text-[10px] font-medium uppercase tracking-wide text-neutral-400">
                   Case quantity
                 </p>
@@ -612,12 +612,12 @@ export function ProductDetail({
                 </p>
               </div>
 
-              <div className="px-3 py-3">
+              <div className="col-span-2 border-t border-neutral-200 px-3 py-3 sm:col-span-1 sm:border-t-0">
                 <p className="text-center text-[10px] font-medium uppercase tracking-wide text-neutral-400">
                   Quantity
                 </p>
 
-                <div className="mt-1 flex h-5 items-center justify-center">
+                <div className="mt-1 flex h-11 items-center justify-center gap-2">
                   <button
                     type="button"
                     onClick={
@@ -628,7 +628,7 @@ export function ProductDetail({
                       minimumQuantity
                     }
                     aria-label="Decrease quantity"
-                    className="flex h-6 w-7 items-center justify-center text-neutral-500 transition hover:text-neutral-950 disabled:cursor-not-allowed disabled:opacity-30"
+                    className="flex h-11 w-11 items-center justify-center rounded-lg text-neutral-500 transition hover:bg-neutral-50 hover:text-neutral-950 disabled:cursor-not-allowed disabled:opacity-30"
                   >
                     <Minus
                       size={13}
@@ -652,7 +652,7 @@ export function ProductDetail({
                         activeStock
                     }
                     aria-label="Increase quantity"
-                    className="flex h-6 w-7 items-center justify-center text-neutral-500 transition hover:text-neutral-950 disabled:cursor-not-allowed disabled:opacity-30"
+                    className="flex h-11 w-11 items-center justify-center rounded-lg text-neutral-500 transition hover:bg-neutral-50 hover:text-neutral-950 disabled:cursor-not-allowed disabled:opacity-30"
                   >
                     <Plus
                       size={13}

@@ -116,7 +116,7 @@ export function CartPage() {
             return (
               <article
                 key={item.lineId}
-                className={`grid gap-4 p-4 sm:grid-cols-[92px_minmax(0,1fr)_auto] sm:items-center ${
+                className={`grid grid-cols-[72px_minmax(0,1fr)] gap-4 p-4 sm:grid-cols-[92px_minmax(0,1fr)_auto] sm:items-center ${
                   index !== items.length - 1
                     ? "border-b border-neutral-200"
                     : ""
@@ -191,7 +191,7 @@ export function CartPage() {
                   </button>
                 </div>
 
-                <div className="flex items-center justify-between gap-4 sm:flex-col sm:items-end">
+                <div className="col-span-2 flex flex-wrap items-center justify-between gap-3 sm:col-span-1 sm:flex-col sm:items-end">
                   <div className="text-right">
                     <p className="text-sm font-semibold text-neutral-950">
                       {formatMoney(
@@ -208,7 +208,7 @@ export function CartPage() {
                     </p>
                   </div>
 
-                  <div className="flex h-9 items-center overflow-hidden rounded-lg border border-neutral-200 bg-white">
+                  <div className="flex h-11 items-center overflow-hidden rounded-lg border border-neutral-200 bg-white">
                     <button
                       type="button"
                       aria-label={`Decrease ${item.productName} quantity`}
@@ -219,7 +219,7 @@ export function CartPage() {
                             quantityStep,
                         )
                       }
-                      className="flex h-full w-9 items-center justify-center text-neutral-600 transition hover:bg-neutral-50 hover:text-neutral-950"
+                      className="flex h-full w-11 items-center justify-center text-neutral-600 transition hover:bg-neutral-50 hover:text-neutral-950"
                     >
                       <Minus className="h-3.5 w-3.5" />
                     </button>
@@ -256,7 +256,7 @@ export function CartPage() {
                             quantityStep,
                         )
                       }
-                      className="flex h-full w-9 items-center justify-center text-neutral-600 transition hover:bg-neutral-50 hover:text-neutral-950"
+                      className="flex h-full w-11 items-center justify-center text-neutral-600 transition hover:bg-neutral-50 hover:text-neutral-950"
                     >
                       <Plus className="h-3.5 w-3.5" />
                     </button>

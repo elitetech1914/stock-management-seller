@@ -53,7 +53,7 @@ export function ImportProductsForm() {
     <div className="space-y-6">
       <form
         action={formAction}
-        className="rounded-2xl border border-neutral-200 bg-white p-6"
+        className="rounded-2xl border border-neutral-200 bg-white p-4 sm:p-6"
       >
         {/* HEADER */}
         <div>
@@ -71,7 +71,7 @@ export function ImportProductsForm() {
 
         {/* FILE INPUT */}
         <div className="mt-6">
-          <label className="group flex cursor-pointer items-center gap-4 rounded-xl border border-dashed border-neutral-300 bg-neutral-50 p-5 transition hover:border-neutral-400 hover:bg-neutral-100/60">
+          <label className="group flex cursor-pointer flex-wrap items-center gap-3 rounded-xl border border-dashed border-neutral-300 bg-neutral-50 p-3 transition hover:border-neutral-400 hover:bg-neutral-100/60 sm:gap-4 sm:p-5">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-neutral-200 bg-white text-[#17352c] shadow-sm">
               <FileSpreadsheet
                 size={19}

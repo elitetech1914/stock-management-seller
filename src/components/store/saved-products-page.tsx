@@ -31,7 +31,7 @@ export function SavedProductsPage() {
   } = useSavedProducts();
 
   return (
-    <section className="mx-auto max-w-[1500px] px-5 py-8 lg:px-8 lg:py-10">
+    <section className="mx-auto max-w-[1500px] px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
       <div className="flex flex-col gap-4 border-b border-neutral-200 pb-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-neutral-400">
@@ -100,7 +100,7 @@ export function SavedProductsPage() {
           </Link>
         </div>
       ) : (
-        <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-9 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+        <div className="mt-8 grid grid-cols-2 gap-x-3 sm:gap-x-4 gap-y-9 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {products.map(
             (product) => (
               <article
@@ -181,7 +181,7 @@ export function SavedProductsPage() {
                     </p>
                   )}
 
-                  <div className="mt-3 flex items-end justify-between gap-3">
+                  <div className="mt-3 flex flex-wrap items-end justify-between gap-x-3 gap-y-2">
                     <div>
                       <p className="text-lg font-semibold">
                         {formatMoney(

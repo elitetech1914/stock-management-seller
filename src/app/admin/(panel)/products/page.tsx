@@ -67,7 +67,7 @@ export default async function ProductsPage() {
     );
 
   return (
-    <div className="p-8 lg:p-10">
+    <div className="p-4 sm:p-6 lg:p-8 2xl:p-10">
       {/* PAGE HEADER */}
       <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
@@ -75,7 +75,7 @@ export default async function ProductsPage() {
             Catalog
           </p>
 
-          <h1 className="mt-1 text-4xl font-semibold tracking-[-0.05em]">
+          <h1 className="mt-1 text-3xl font-semibold sm:text-4xl tracking-[-0.05em]">
             Products
           </h1>
 

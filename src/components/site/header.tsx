@@ -3,24 +3,26 @@
 /* eslint-disable @next/next/no-img-element */
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
   Heart,
   LogOut,
-  Menu,
   Package,
   Search,
   ShoppingBag,
   UserRound,
-  X,
 } from "lucide-react";
 import {
+  useCallback,
   useEffect,
   useRef,
   useState,
 } from "react";
+
+import { StoreNavigation, type StoreMenu } from "./store-navigation";
 
 import { siteConfig } from "@/config/site";
 import { authClient } from "@/lib/auth-client";
@@ -41,6 +43,13 @@ function formatMoney(cents: number) {
 }
 
 export function Header() {
+  const pathname = usePathname();
+  const [mobileMenu, setMobileMenu] = useState<{ pathname: string; section: StoreMenu | null }>({ pathname, section: null });
+  if (mobileMenu.pathname !== pathname) setMobileMenu({ pathname, section: null });
+  const activeMenu = mobileMenu.pathname === pathname ? mobileMenu.section : null;
+  const handleMobileMenuChange = useCallback((section: StoreMenu | null) => {
+    setMobileMenu({ pathname, section });
+  }, [pathname]);
   const {
     items,
     totalItems,
@@ -65,12 +74,7 @@ export function Header() {
     setCartOpen,
   ] = useState(false);
 
-  const [
-    mobileOpen,
-    setMobileOpen,
-  ] = useState(false);
-
-  const [
+const [
     categories,
     setCategories,
   ] = useState<HeaderCategory[]>(
@@ -315,6 +319,12 @@ export function Header() {
   function handleAccountToggle() {
     setCartOpen(false);
 
+    if (window.matchMedia("(width < 1024px)").matches) {
+      setAccountOpen(false);
+      handleMobileMenuChange("more");
+      return;
+    }
+
     setAccountOpen(
       (current) => !current
     );
@@ -347,34 +357,14 @@ export function Header() {
 
       <header className="border-b border-neutral-200 bg-white">
         {/* MAIN HEADER */}
-        <div className="mx-auto flex h-[76px] max-w-[1500px] items-center gap-5 px-5 lg:gap-7 lg:px-8">
+        <div className="mx-auto flex h-[76px] max-w-[1500px] items-center gap-2 px-3 sm:gap-5 sm:px-5 lg:gap-7 lg:px-8">
           {/* MOBILE MENU */}
-          <button
-            type="button"
-            onClick={() =>
-              setMobileOpen(
-                (current) =>
-                  !current
-              )
-            }
-            className="flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-neutral-100 lg:hidden"
-            aria-label={
-              mobileOpen
-                ? "Close navigation"
-                : "Open navigation"
-            }
-          >
-            {mobileOpen ? (
-              <X size={21} />
-            ) : (
-              <Menu size={22} />
-            )}
-          </button>
+          <StoreNavigation menu={activeMenu} onMenuChange={handleMobileMenuChange} categories={categories} totalItems={totalItems} totalSaved={totalSaved} signedIn={Boolean(session?.user)} isAdmin={session?.user?.role === "admin"} onSignIn={handleBuyerSignIn} onSignOut={handleSignOut} />
 
           {/* LOGO */}
           <Link
             href="/"
-            className="shrink-0 text-[27px] font-semibold tracking-[-0.045em] text-neutral-950"
+            className="min-w-0 text-[24px] sm:shrink-0 sm:text-[27px] font-semibold tracking-[-0.045em] text-neutral-950"
           >
             {siteConfig.name}
           </Link>
@@ -402,7 +392,7 @@ export function Header() {
           </form>
 
           {/* RIGHT NAV */}
-          <nav className="ml-auto flex items-center gap-3 md:gap-4">
+          <nav className="ml-auto flex shrink-0 items-center gap-1 sm:gap-3 md:gap-4">
             <button
               type="button"
               className="hidden text-sm font-medium text-neutral-700 transition hover:text-neutral-950 md:block"
@@ -471,9 +461,9 @@ export function Header() {
                     }
                     aria-label="Account menu"
                     aria-expanded={
-                      accountOpen
+                      accountOpen || activeMenu === "more"
                     }
-                    className="flex h-9 items-center gap-1.5 rounded-full px-2 transition hover:bg-neutral-100"
+                    className="flex h-11 items-center gap-1.5 rounded-full px-2 transition hover:bg-neutral-100 lg:h-9"
                   >
                     <UserRound
                       size={20}
@@ -482,7 +472,7 @@ export function Header() {
                     <ChevronDown
                       size={13}
                       className={`hidden transition-transform md:block ${
-                        accountOpen
+                        accountOpen || activeMenu === "more"
                           ? "rotate-180"
                           : ""
                       }`}
@@ -490,7 +480,7 @@ export function Header() {
                   </button>
 
                   {accountOpen && (
-                    <div className="absolute right-0 top-[46px] z-[100] w-[270px] overflow-hidden rounded-[22px] border border-white/80 bg-white/70 p-2 shadow-[0_28px_80px_rgba(0,0,0,0.18)] backdrop-blur-2xl">
+                    <div className="absolute right-0 top-[46px] z-[100] hidden w-[270px] overflow-hidden rounded-[22px] border border-white/80 bg-white/70 p-2 shadow-[0_28px_80px_rgba(0,0,0,0.18)] backdrop-blur-2xl lg:block">
                       {/* USER CARD */}
                       <div className="rounded-2xl border border-white/80 bg-white/55 px-4 py-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.95)]">
                         <p className="truncate text-sm font-semibold text-neutral-950">
@@ -587,7 +577,7 @@ export function Header() {
                     handleBuyerSignIn
                   }
                   aria-label="Sign in"
-                  className="flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-neutral-100 md:hidden"
+                  className="flex h-11 w-11 items-center justify-center rounded-full transition hover:bg-neutral-100 md:hidden"
                 >
                   <UserRound
                     size={20}
@@ -639,7 +629,7 @@ export function Header() {
                     ? `Shopping cart with ${totalItems} items`
                     : "Shopping cart"
                 }
-                className="relative flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-neutral-100 md:hidden"
+                className="relative flex h-11 w-11 items-center justify-center rounded-full transition hover:bg-neutral-100 md:hidden"
               >
                 <ShoppingBag
                   size={21}
@@ -949,63 +939,6 @@ export function Header() {
           </div>
         </div>
 
-        {/* MOBILE NAV */}
-        {mobileOpen && (
-          <div className="border-t border-neutral-200 bg-white px-5 py-5 lg:hidden">
-            <form
-              action="/products"
-              method="GET"
-              className="flex items-center rounded-xl border border-neutral-300 bg-neutral-50 px-3"
-            >
-              <Search
-                size={17}
-                className="text-neutral-400"
-              />
-
-              <input
-                type="search"
-                name="q"
-                placeholder="Search products..."
-                className="h-11 min-w-0 flex-1 bg-transparent px-3 text-sm outline-none"
-              />
-            </form>
-
-            <div className="mt-4 grid gap-1">
-              <Link
-                href="/products"
-                onClick={() =>
-                  setMobileOpen(
-                    false
-                  )
-                }
-                className="rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-neutral-50"
-              >
-                All Products
-              </Link>
-
-              {categories.map(
-                (category) => (
-                  <Link
-                    key={
-                      category.id
-                    }
-                    href={`/categories/${category.slug}`}
-                    onClick={() =>
-                      setMobileOpen(
-                        false
-                      )
-                    }
-                    className="rounded-lg px-3 py-2.5 text-sm text-neutral-700 hover:bg-neutral-50"
-                  >
-                    {
-                      category.name
-                    }
-                  </Link>
-                )
-              )}
-            </div>
-          </div>
-        )}
       </header>
     </>
   );

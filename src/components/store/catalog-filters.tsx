@@ -266,7 +266,7 @@ export function CategorySort({
       value={selectedSort}
       options={sortOptions}
       onChange={changeSort}
-      className="w-[210px]"
+      className="w-full sm:w-[210px]"
     />
   );
 }
@@ -385,7 +385,7 @@ function GlassDropdown({
 
       {/* MENU */}
       {open && (
-        <div className="absolute left-0 top-[calc(100%+8px)] z-[150] w-full min-w-[230px] overflow-hidden rounded-[20px] border border-white/65 bg-white/28 p-2 shadow-[0_18px_45px_rgba(0,0,0,0.12)] backdrop-blur-[24px]">
+        <div className="absolute left-0 top-[calc(100%+8px)] z-[150] w-full overflow-hidden rounded-[20px] border border-white/65 bg-white/28 p-2 shadow-[0_18px_45px_rgba(0,0,0,0.12)] backdrop-blur-[24px]">
           <div
             className="max-h-[290px] space-y-1 overflow-y-auto overscroll-contain pr-0.5"
             style={{

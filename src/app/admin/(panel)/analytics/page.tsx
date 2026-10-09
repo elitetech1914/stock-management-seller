@@ -395,7 +395,7 @@ export default async function AnalyticsPage() {
     );
 
   return (
-    <div className="mx-auto w-full max-w-[1500px] px-6 py-5 lg:px-8">
+    <div className="mx-auto w-full max-w-[1500px] px-4 py-5 sm:px-6 lg:px-8">
       {/* HEADER */}
       <div>
         <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-400">
@@ -479,8 +479,8 @@ export default async function AnalyticsPage() {
             description="Paid revenue over the last 6 months."
           />
 
-          <div className="px-6 pb-6 pt-7">
-            <div className="flex h-[260px] items-end gap-4 border-b border-neutral-200">
+          <div className="px-3 pb-6 pt-7 sm:px-6">
+            <div className="flex h-[260px] items-end gap-2 sm:gap-4 border-b border-neutral-200">
               {months.map(
                 (month) => {
                   const height =
