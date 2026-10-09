@@ -226,7 +226,7 @@ export default async function AdminCustomerDetailPage({
           </div>
 
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-400">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
               Customer
             </p>
 
@@ -413,7 +413,7 @@ export default async function AdminCustomerDetailPage({
           {customerOrders.length ===
           0 ? (
             <div className="flex min-h-[176px] flex-col items-center justify-center px-6 py-10 text-center">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-50 text-neutral-400">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-50 text-neutral-500">
                 <ShoppingBag
                   size={18}
                 />
@@ -432,7 +432,7 @@ export default async function AdminCustomerDetailPage({
           ) : (
             <>
               {/* TABLE HEADER */}
-              <div className="hidden grid-cols-[1.35fr_0.7fr_0.8fr_0.75fr_28px] gap-4 border-b border-neutral-200 bg-[#fafaf8] px-5 py-3.5 lg:grid">
+              <div className="hidden grid-cols-[1.35fr_0.7fr_0.8fr_0.75fr_28px] gap-4 border-b border-neutral-200 bg-background px-5 py-3.5 lg:grid">
                 <Heading>
                   Order
                 </Heading>
@@ -461,7 +461,7 @@ export default async function AdminCustomerDetailPage({
                         order.id
                       }
                       href={`/admin/orders/${order.id}`}
-                      className="group block px-5 py-4 transition hover:bg-[#fafaf8] lg:grid lg:grid-cols-[1.35fr_0.7fr_0.8fr_0.75fr_28px] lg:items-center lg:gap-4"
+                      className="group block px-5 py-4 transition hover:bg-background lg:grid lg:grid-cols-[1.35fr_0.7fr_0.8fr_0.75fr_28px] lg:items-center lg:gap-4"
                     >
                       <div>
                         <p className="text-sm font-semibold text-neutral-950">
@@ -470,7 +470,7 @@ export default async function AdminCustomerDetailPage({
                           }
                         </p>
 
-                        <p className="mt-1 text-xs text-neutral-400">
+                        <p className="mt-1 text-xs text-neutral-500">
                           {formatDate(
                             order.createdAt
                           )}
@@ -554,7 +554,7 @@ function Metric({
       </div>
 
       <div className="min-w-0">
-        <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-neutral-400">
+        <p className="text-xs font-medium uppercase tracking-[0.1em] text-neutral-500">
           {label}
         </p>
 
@@ -580,12 +580,12 @@ function Info({
 }) {
   return (
     <div className="flex min-w-0 items-start gap-3">
-      <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-neutral-50 text-neutral-400">
+      <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-neutral-50 text-neutral-500">
         {icon}
       </div>
 
       <div className="min-w-0">
-        <p className="text-[9px] font-medium uppercase tracking-[0.08em] text-neutral-400">
+        <p className="text-xs font-medium uppercase tracking-[0.08em] text-neutral-500">
           {label}
         </p>
 
@@ -604,7 +604,7 @@ function Heading({
     React.ReactNode;
 }) {
   return (
-    <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-neutral-400">
+    <p className="text-xs font-semibold uppercase tracking-[0.1em] text-neutral-500">
       {children}
     </p>
   );

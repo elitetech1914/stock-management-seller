@@ -18,6 +18,8 @@ import {
   useState,
 } from "react";
 
+import { useHydrated } from "@/lib/use-hydrated";
+
 import { placeOrder } from "@/app/checkout/actions";
 import { useCart } from "@/lib/cart";
 
@@ -66,8 +68,7 @@ export function CheckoutForm({
     [buyerUserId]
   );
 
-  const [mounted, setMounted] =
-    useState(false);
+  const mounted = useHydrated();
 
   const [
     isSubmitting,
@@ -96,8 +97,6 @@ export function CheckoutForm({
   });
 
   useEffect(() => {
-    setMounted(true);
-
     try {
       const stored =
         window.localStorage.getItem(
@@ -113,6 +112,8 @@ export function CheckoutForm({
           stored
         ) as Partial<CheckoutDetails>;
 
+      // Restore browser-only persisted details after hydration.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setDetails((current) => ({
         ...current,
         ...parsed,
@@ -175,6 +176,7 @@ export function CheckoutForm({
       setError(
         "Please enter the contact name."
       );
+      document.getElementById("checkout-contactName")?.focus();
       return;
     }
 
@@ -182,6 +184,7 @@ export function CheckoutForm({
       setError(
         "Please enter the business or company name."
       );
+      document.getElementById("checkout-companyName")?.focus();
       return;
     }
 
@@ -189,6 +192,7 @@ export function CheckoutForm({
       setError(
         "Please enter a phone number."
       );
+      document.getElementById("checkout-phone")?.focus();
       return;
     }
 
@@ -196,6 +200,7 @@ export function CheckoutForm({
       setError(
         "Please enter the shipping address."
       );
+      document.getElementById("checkout-addressLine1")?.focus();
       return;
     }
 
@@ -203,6 +208,7 @@ export function CheckoutForm({
       setError(
         "Please enter the city."
       );
+      document.getElementById("checkout-city")?.focus();
       return;
     }
 
@@ -210,6 +216,7 @@ export function CheckoutForm({
       setError(
         "Please enter the state or region."
       );
+      document.getElementById("checkout-state")?.focus();
       return;
     }
 
@@ -217,6 +224,7 @@ export function CheckoutForm({
       setError(
         "Please enter the postal code."
       );
+      document.getElementById("checkout-postalCode")?.focus();
       return;
     }
 
@@ -224,6 +232,7 @@ export function CheckoutForm({
       setError(
         "Please enter the country."
       );
+      document.getElementById("checkout-country")?.focus();
       return;
     }
 
@@ -301,9 +310,11 @@ export function CheckoutForm({
   return (
     <form
       onSubmit={handleSubmit}
+      aria-busy={isSubmitting}
       className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]"
     >
-      <div className="space-y-5">
+      {error && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 lg:col-span-2">{error}</div>}
+      <fieldset disabled={isSubmitting} className="min-w-0 space-y-5">
         {/* BUYER ACCOUNT */}
         <section className="rounded-2xl border border-neutral-200 bg-white p-5 sm:p-6">
           <div className="flex items-start gap-3">
@@ -331,7 +342,7 @@ export function CheckoutForm({
         {/* BUSINESS DETAILS */}
         <section className="rounded-2xl border border-neutral-200 bg-white p-5 sm:p-6">
           <div className="mb-5 flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#f3f2ee]">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-background">
               <Building2
                 size={18}
               />
@@ -351,6 +362,8 @@ export function CheckoutForm({
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Field
+              name="contactName"
+              autoComplete="name"
               label="Contact name"
               value={
                 details.contactName
@@ -370,6 +383,8 @@ export function CheckoutForm({
             />
 
             <Field
+              name="companyName"
+              autoComplete="organization"
               label="Company name"
               value={
                 details.companyName
@@ -389,6 +404,9 @@ export function CheckoutForm({
             />
 
             <Field
+              name="phone"
+              autoComplete="tel"
+              type="tel"
               label="Phone"
               value={details.phone}
               onChange={(value) =>
@@ -406,7 +424,7 @@ export function CheckoutForm({
         {/* SHIPPING */}
         <section className="rounded-2xl border border-neutral-200 bg-white p-5 sm:p-6">
           <div className="mb-5 flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#f3f2ee]">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-background">
               <MapPin
                 size={18}
               />
@@ -426,6 +444,8 @@ export function CheckoutForm({
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Field
+              name="addressLine1"
+              autoComplete="shipping address-line1"
               label="Address"
               value={
                 details.addressLine1
@@ -441,6 +461,8 @@ export function CheckoutForm({
             />
 
             <Field
+              name="addressLine2"
+              autoComplete="shipping address-line2"
               label="Apartment, suite, etc."
               value={
                 details.addressLine2
@@ -457,6 +479,8 @@ export function CheckoutForm({
             />
 
             <Field
+              name="city"
+              autoComplete="shipping address-level2"
               label="City"
               value={details.city}
               onChange={(value) =>
@@ -469,6 +493,8 @@ export function CheckoutForm({
             />
 
             <Field
+              name="state"
+              autoComplete="shipping address-level1"
               label="State / Region"
               value={details.state}
               onChange={(value) =>
@@ -481,6 +507,8 @@ export function CheckoutForm({
             />
 
             <Field
+              name="postalCode"
+              autoComplete="shipping postal-code"
               label="Postal code"
               value={
                 details.postalCode
@@ -495,6 +523,8 @@ export function CheckoutForm({
             />
 
             <Field
+              name="country"
+              autoComplete="shipping country-name"
               label="Country"
               value={
                 details.country
@@ -535,10 +565,10 @@ export function CheckoutForm({
             }
             rows={4}
             placeholder="Special delivery instructions, purchasing reference, etc."
-            className="mt-4 w-full resize-none rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-950 outline-none transition placeholder:text-neutral-400 focus:border-[#17352c] focus:ring-1 focus:ring-[#17352c]"
+            className="mt-4 w-full resize-none rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-950 outline-none transition placeholder:text-neutral-500 focus:border-[#17352c] focus:ring-1 focus:ring-[#17352c]"
           />
         </section>
-      </div>
+      </fieldset>
 
       {/* ORDER SUMMARY */}
       <aside className="lg:sticky lg:top-5 lg:self-start">
@@ -597,7 +627,7 @@ export function CheckoutForm({
                       <div className="flex h-full w-full items-center justify-center">
                         <Package
                           size={17}
-                          className="text-neutral-400"
+                          className="text-neutral-500"
                         />
                       </div>
                     )}
@@ -660,12 +690,6 @@ export function CheckoutForm({
             </div>
           </div>
 
-          {error && (
-            <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-xs leading-5 text-red-700">
-              {error}
-            </div>
-          )}
-
           <button
             type="submit"
             disabled={
@@ -707,6 +731,9 @@ export function CheckoutForm({
 }
 
 type FieldProps = {
+  name: string;
+  autoComplete: string;
+  type?: "text" | "tel";
   label: string;
   value: string;
 
@@ -721,6 +748,9 @@ type FieldProps = {
 };
 
 function Field({
+  name,
+  autoComplete,
+  type = "text",
   label,
   value,
   onChange,
@@ -729,13 +759,15 @@ function Field({
   className = "",
   icon,
 }: FieldProps) {
+  const [validation, setValidation] = useState("");
+  const id = "checkout-" + name;
   return (
     <div className={className}>
-      <label className="mb-1.5 block text-sm font-medium text-neutral-800">
+      <label htmlFor={id} className="mb-1.5 block text-sm font-medium text-neutral-800">
         {label}
 
         {!required && (
-          <span className="ml-1 font-normal text-neutral-400">
+          <span className="ml-1 font-normal text-neutral-500">
             optional
           </span>
         )}
@@ -743,29 +775,34 @@ function Field({
 
       <div className="relative">
         {icon && (
-          <div className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400">
+          <div className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-500">
             {icon}
           </div>
         )}
 
         <input
-          type="text"
+          id={id}
+          name={name}
+          type={type}
+          autoComplete={autoComplete}
+          aria-invalid={Boolean(validation)}
+          aria-describedby={validation ? id + "-error" : undefined}
+          onInvalid={(event) => setValidation(event.currentTarget.validationMessage)}
+          onBlur={(event) => { if (value) setValidation(event.currentTarget.validationMessage); }}
           value={value}
           onChange={(event) =>
-            onChange(
-              event.target.value
-            )
+            { onChange(event.target.value); setValidation(""); }
           }
           placeholder={placeholder}
           required={required}
-          disabled={false}
-          className={`h-11 w-full rounded-xl border border-neutral-300 bg-white pr-4 text-sm text-neutral-950 outline-none transition placeholder:text-neutral-400 focus:border-[#17352c] focus:ring-1 focus:ring-[#17352c] ${
+          className={`h-11 w-full rounded-xl border border-neutral-300 bg-white pr-4 text-sm text-neutral-950 outline-none transition placeholder:text-neutral-500 focus:border-[#17352c] focus:ring-1 focus:ring-[#17352c] ${
             icon
               ? "pl-10"
               : "pl-4"
           }`}
         />
       </div>
+      {validation && <p id={id + "-error"} role="alert" className="mt-2 text-xs text-red-700">{validation}</p>}
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import { SubmitButton } from "@/components/ui/submit-button";
 import { eq } from "drizzle-orm";
 import {
   ArrowLeft,
@@ -239,7 +240,7 @@ export default async function AdminOrderDetailPage({
       {/* HEADER */}
       <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-400">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
             Order
           </p>
 
@@ -312,7 +313,7 @@ export default async function AdminOrderDetailPage({
               </div>
             </div>
 
-            <div className="hidden grid-cols-[minmax(0,1.5fr)_130px_80px_120px] gap-5 border-b border-neutral-200 bg-[#fafaf8] px-5 py-3.5 lg:grid">
+            <div className="hidden grid-cols-[minmax(0,1.5fr)_130px_80px_120px] gap-5 border-b border-neutral-200 bg-background px-5 py-3.5 lg:grid">
               <Heading>
                 Product
               </Heading>
@@ -355,7 +356,7 @@ export default async function AdminOrderDetailPage({
                       )}
 
                       {item.sku && (
-                        <p className="mt-1 truncate font-mono text-[11px] text-neutral-400">
+                        <p className="mt-1 truncate font-mono text-xs text-neutral-500">
                           {
                             item.sku
                           }
@@ -399,7 +400,7 @@ export default async function AdminOrderDetailPage({
               <div className="flex items-center gap-2">
                 <UserRound
                   size={16}
-                  className="text-neutral-400"
+                  className="text-neutral-500"
                 />
 
                 <h2 className="font-semibold text-neutral-950">
@@ -463,7 +464,7 @@ export default async function AdminOrderDetailPage({
               <div className="flex items-center gap-2">
                 <MapPin
                   size={16}
-                  className="text-neutral-400"
+                  className="text-neutral-500"
                 />
 
                 <h2 className="font-semibold text-neutral-950">
@@ -579,7 +580,7 @@ export default async function AdminOrderDetailPage({
               </div>
 
               <span
-                className={`inline-flex rounded-full border px-2.5 py-1 text-[10px] font-semibold ${statusClasses(
+                className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${statusClasses(
                   order.orderStatus
                 )}`}
               >
@@ -605,6 +606,7 @@ export default async function AdminOrderDetailPage({
 
               <OrderSelect
                 name="orderStatus"
+                label="Order status"
                 defaultValue={
                   order.orderStatus
                 }
@@ -613,12 +615,9 @@ export default async function AdminOrderDetailPage({
                 }
               />
 
-              <button
-                type="submit"
+              <SubmitButton
                 className="h-10 w-full rounded-lg border border-neutral-200 bg-white text-sm font-semibold text-neutral-900 transition hover:bg-neutral-50"
-              >
-                Update fulfillment
-              </button>
+               pendingLabel="Saving...">Update fulfillment</SubmitButton>
             </form>
           </section>
 
@@ -636,7 +635,7 @@ export default async function AdminOrderDetailPage({
               </div>
 
               <span
-                className={`inline-flex rounded-full border px-2.5 py-1 text-[10px] font-semibold ${paymentClasses(
+                className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${paymentClasses(
                   order.paymentStatus
                 )}`}
               >
@@ -662,6 +661,7 @@ export default async function AdminOrderDetailPage({
 
               <OrderSelect
                 name="paymentStatus"
+                label="Payment status"
                 defaultValue={
                   order.paymentStatus
                 }
@@ -677,12 +677,9 @@ export default async function AdminOrderDetailPage({
                 ]}
               />
 
-              <button
-                type="submit"
+              <SubmitButton
                 className="h-10 w-full rounded-lg border border-neutral-200 bg-white text-sm font-semibold text-neutral-900 transition hover:bg-neutral-50"
-              >
-                Update payment
-              </button>
+               pendingLabel="Saving...">Update payment</SubmitButton>
             </form>
           </section>
         </aside>
@@ -697,7 +694,7 @@ function Heading({
   children: React.ReactNode;
 }) {
   return (
-    <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-neutral-400">
+    <p className="text-xs font-semibold uppercase tracking-[0.1em] text-neutral-500">
       {children}
     </p>
   );
@@ -717,12 +714,12 @@ function Info({
 }) {
   return (
     <div className="flex min-w-0 items-start gap-3">
-      <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-neutral-50 text-neutral-400">
+      <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-neutral-50 text-neutral-500">
         {icon}
       </div>
 
       <div className="min-w-0">
-        <p className="text-[9px] font-semibold uppercase tracking-[0.08em] text-neutral-400">
+        <p className="text-xs font-semibold uppercase tracking-[0.08em] text-neutral-500">
           {label}
         </p>
 

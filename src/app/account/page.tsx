@@ -1,8 +1,6 @@
 import {
-  and,
   desc,
   eq,
-  inArray,
 } from "drizzle-orm";
 import {
   ArrowRight,
@@ -140,7 +138,7 @@ export default async function AccountPage() {
       {/* HEADER */}
       <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-400">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
             Buyer account
           </p>
 
@@ -262,7 +260,7 @@ export default async function AccountPage() {
           </div>
         ) : (
           <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
-            <div className="hidden grid-cols-[1.4fr_0.8fr_0.8fr_0.8fr] gap-4 border-b border-neutral-200 bg-[#fafaf8] px-5 py-3 text-[10px] font-semibold uppercase tracking-[0.1em] text-neutral-400 sm:grid">
+            <div className="hidden grid-cols-[1.4fr_0.8fr_0.8fr_0.8fr] gap-4 border-b border-neutral-200 bg-background px-5 py-3 text-xs font-semibold uppercase tracking-[0.1em] text-neutral-500 sm:grid">
               <div>Order</div>
               <div>Total</div>
               <div>Status</div>
@@ -275,7 +273,7 @@ export default async function AccountPage() {
                   <Link
                     key={order.id}
                     href={`/account/orders/${order.orderNumber}`}
-                    className="block px-5 py-4 transition hover:bg-[#fafaf8] sm:grid sm:grid-cols-[1.4fr_0.8fr_0.8fr_0.8fr] sm:items-center sm:gap-4"
+                    className="block px-5 py-4 transition hover:bg-background sm:grid sm:grid-cols-[1.4fr_0.8fr_0.8fr_0.8fr] sm:items-center sm:gap-4"
                   >
                     <div>
                       <p className="text-sm font-semibold text-neutral-950">
@@ -284,7 +282,7 @@ export default async function AccountPage() {
                         }
                       </p>
 
-                      <p className="mt-1 text-xs text-neutral-400">
+                      <p className="mt-1 text-xs text-neutral-500">
                         {formatDate(
                           order.createdAt
                         )}
@@ -358,7 +356,7 @@ function Stat({
       </div>
 
       <div>
-        <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-neutral-400">
+        <p className="text-xs font-medium uppercase tracking-[0.1em] text-neutral-500">
           {label}
         </p>
 

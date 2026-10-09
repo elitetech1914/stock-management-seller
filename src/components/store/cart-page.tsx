@@ -9,7 +9,7 @@ import {
   ShoppingCart,
   Trash2,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useHydrated } from "@/lib/use-hydrated";
 
 import {
   getCartMinimumQuantity,
@@ -33,11 +33,7 @@ export function CartPage() {
     clearCart,
   } = useCart();
 
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useHydrated();
 
   if (!mounted) {
     return (
@@ -66,7 +62,7 @@ export function CartPage() {
 
           <Link
             href="/products"
-            className="mt-6 inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-neutral-950 px-5 text-sm font-medium text-white transition hover:bg-neutral-800"
+            className="mt-6 inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-brand px-5 text-sm font-medium text-white transition hover:bg-[#24483d]"
           >
             <ArrowLeft className="h-4 w-4" />
             Browse products
@@ -96,8 +92,8 @@ export function CartPage() {
 
         <button
           type="button"
-          onClick={clearCart}
-          className="inline-flex h-9 items-center gap-2 rounded-lg border border-neutral-200 bg-white px-3 text-sm font-medium text-neutral-600 transition hover:border-neutral-300 hover:bg-neutral-50 hover:text-neutral-950"
+          onClick={() => { if (window.confirm("Remove all products from your cart?")) clearCart(); }}
+          className="inline-flex h-9 items-center gap-2 rounded-lg border border-neutral-200 bg-white px-3 text-sm font-medium text-red-700 transition hover:border-red-200 hover:bg-red-50"
         >
           <Trash2 className="h-4 w-4" />
           Clear cart
@@ -134,7 +130,7 @@ export function CartPage() {
                     />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center">
-                      <Package className="h-6 w-6 text-neutral-400" />
+                      <Package className="h-6 w-6 text-neutral-500" />
                     </div>
                   )}
                 </Link>
@@ -154,7 +150,7 @@ export function CartPage() {
                   ) : null}
 
                   {item.sku ? (
-                    <p className="mt-1 text-xs text-neutral-400">
+                    <p className="mt-1 text-xs text-neutral-500">
                       SKU: {item.sku}
                     </p>
                   ) : null}
@@ -267,7 +263,7 @@ export function CartPage() {
           })}
         </section>
 
-        <aside className="lg:self-start">
+        <aside className="lg:sticky lg:top-5 lg:self-start">
           <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
             <h2 className="text-base font-semibold text-neutral-950">
               Order summary
@@ -308,7 +304,7 @@ export function CartPage() {
 
             <Link
               href="/checkout"
-              className="flex h-11 w-full items-center justify-center rounded-lg bg-neutral-950 px-4 text-sm font-semibold text-white transition hover:bg-neutral-800"
+              className="flex h-11 w-full items-center justify-center rounded-lg bg-brand px-4 text-sm font-semibold text-white transition hover:bg-[#24483d]"
             >
               Continue to checkout
             </Link>

@@ -129,8 +129,8 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-[calc(100vh-120px)] bg-[#f7f6f2] px-4 py-12 sm:px-6 lg:px-8">
-      <div className="mx-auto grid max-w-6xl overflow-hidden rounded-[28px] border border-neutral-200 bg-white shadow-[0_24px_80px_rgba(0,0,0,0.08)] lg:grid-cols-[0.9fr_1.1fr]">
+    <main className="min-h-[calc(100vh-120px)] bg-background px-4 py-12 sm:px-6 lg:px-8">
+      <div className="mx-auto grid max-w-6xl overflow-hidden rounded-[28px] border border-neutral-200 bg-white shadow-[0_8px_30px_rgba(23,53,44,0.06)] lg:grid-cols-[0.9fr_1.1fr]">
         {/* LEFT SIDE */}
         <section className="hidden bg-[#17352c] p-12 text-white lg:flex lg:flex-col lg:justify-between">
           <div>
@@ -185,7 +185,7 @@ export default function LoginPage() {
                 Buyer account
               </p>
 
-              <h2 className="mt-3 text-4xl font-semibold tracking-[-0.045em] text-neutral-950">
+              <h2 className="mt-3 text-3xl font-semibold tracking-tight text-neutral-950">
                 Sign in
               </h2>
 
@@ -198,6 +198,7 @@ export default function LoginPage() {
 
             <form
               onSubmit={handleSubmit}
+              aria-busy={isSubmitting}
               className="space-y-5"
             >
               {/* EMAIL */}
@@ -212,7 +213,7 @@ export default function LoginPage() {
                 <div className="relative">
                   <Mail
                     size={18}
-                    className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400"
+                    className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500"
                   />
 
                   <input
@@ -229,7 +230,7 @@ export default function LoginPage() {
                     spellCheck={false}
                     required
                     placeholder="you@example.com"
-                    className="h-13 w-full rounded-xl border border-neutral-300 bg-white pl-11 pr-4 text-[15px] text-neutral-950 outline-none transition placeholder:text-neutral-400 focus:border-[#17352c] focus:ring-2 focus:ring-[#17352c]/10"
+                    className="h-13 w-full rounded-xl border border-neutral-300 bg-white pl-11 pr-4 text-[15px] text-neutral-950 outline-none transition placeholder:text-neutral-500 focus:border-[#17352c] focus:ring-2 focus:ring-[#17352c]/10"
                   />
                 </div>
               </div>
@@ -248,7 +249,7 @@ export default function LoginPage() {
                 <div className="relative">
                   <LockKeyhole
                     size={18}
-                    className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400"
+                    className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500"
                   />
 
                   <input
@@ -267,7 +268,7 @@ export default function LoginPage() {
                     autoComplete="current-password"
                     required
                     placeholder="Enter your password"
-                    className="h-13 w-full rounded-xl border border-neutral-300 bg-white pl-11 pr-12 text-[15px] text-neutral-950 outline-none transition placeholder:text-neutral-400 focus:border-[#17352c] focus:ring-2 focus:ring-[#17352c]/10"
+                    className="h-13 w-full rounded-xl border border-neutral-300 bg-white pl-11 pr-12 text-[15px] text-neutral-950 outline-none transition placeholder:text-neutral-500 focus:border-[#17352c] focus:ring-2 focus:ring-[#17352c]/10"
                   />
 
                   <button
@@ -278,7 +279,7 @@ export default function LoginPage() {
                           !current
                       )
                     }
-                    className="absolute right-4 top-1/2 flex -translate-y-1/2 items-center justify-center text-neutral-400 transition hover:text-neutral-700"
+                    className="absolute right-2 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center text-neutral-500 transition hover:text-neutral-700"
                     aria-label={
                       showPassword
                         ? "Hide password"

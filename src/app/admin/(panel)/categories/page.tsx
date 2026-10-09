@@ -1,3 +1,4 @@
+import { SubmitButton } from "@/components/ui/submit-button";
 import { asc } from "drizzle-orm";
 import {
   FolderTree,
@@ -79,7 +80,7 @@ export default async function CategoriesPage() {
                         {category.name}
                       </p>
 
-                      <p className="mt-1 truncate text-xs text-neutral-400">
+                      <p className="mt-1 truncate text-xs text-neutral-500">
                         /{category.slug}
                       </p>
                     </div>
@@ -99,7 +100,7 @@ export default async function CategoriesPage() {
 
                       <button
                         type="submit"
-                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-neutral-400 transition hover:bg-red-50 hover:text-red-600"
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-neutral-500 transition hover:bg-red-50 hover:text-red-600"
                         aria-label={`Delete ${category.name}`}
                       >
                         <Trash2
@@ -153,12 +154,9 @@ export default async function CategoriesPage() {
               />
             </div>
 
-            <button
-              type="submit"
+            <SubmitButton
               className="h-11 w-full rounded-xl bg-[#17352c] text-sm font-semibold text-white transition hover:bg-[#24483d]"
-            >
-              Add category
-            </button>
+             pendingLabel="Creating...">Add category</SubmitButton>
           </form>
         </section>
       </div>

@@ -360,7 +360,7 @@ export default async function InventoryPage({
     <div className="mx-auto w-full max-w-[1500px] px-4 py-5 sm:px-6 lg:px-8">
       {/* HEADER */}
       <div>
-        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-400">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
           Catalog
         </p>
 
@@ -432,12 +432,13 @@ export default async function InventoryPage({
         >
           <Search
             size={16}
-            className="ml-3 shrink-0 text-neutral-400"
+            className="ml-3 shrink-0 text-neutral-500"
           />
 
           <input
             type="search"
             name="q"
+            aria-label="Search inventory by product or SKU"
             defaultValue={
               query
             }
@@ -511,7 +512,7 @@ export default async function InventoryPage({
       {/* INVENTORY TABLE */}
       <div className="mt-4 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
         {/* TABLE HEADER */}
-        <div className="hidden grid-cols-[minmax(0,1.8fr)_minmax(140px,0.8fr)_80px_125px_190px] items-center gap-5 border-b border-neutral-200 bg-[#fafaf8] px-6 py-3.5 lg:grid">
+        <div className="hidden grid-cols-[minmax(0,1.8fr)_minmax(140px,0.8fr)_80px_125px_190px] items-center gap-5 border-b border-neutral-200 bg-background px-6 py-3.5 lg:grid">
           <Heading>
             Product
           </Heading>
@@ -536,7 +537,7 @@ export default async function InventoryPage({
         {filteredRows.length ===
         0 ? (
           <div className="px-6 py-16 text-center">
-            <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-100 text-neutral-400">
+            <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-100 text-neutral-500">
               <Boxes
                 size={19}
               />
@@ -552,7 +553,7 @@ export default async function InventoryPage({
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-neutral-100">
+          <div className="grid gap-3 bg-background p-3 lg:block lg:divide-y lg:divide-neutral-100 lg:bg-white lg:p-0">
             {filteredRows.map(
               (row) => {
                 const stockStatus =
@@ -563,13 +564,13 @@ export default async function InventoryPage({
                 return (
                   <div
                     key={`${row.type}-${row.id}`}
-                    className="px-6 py-4 transition hover:bg-[#fafaf8] lg:grid lg:grid-cols-[minmax(0,1.8fr)_minmax(140px,0.8fr)_80px_125px_190px] lg:items-center lg:gap-5"
+                    className="rounded-xl border border-border bg-white px-4 py-4 transition hover:bg-background lg:rounded-none lg:border-0 lg:px-5 lg:grid lg:grid-cols-[minmax(0,1.8fr)_minmax(140px,0.8fr)_80px_125px_190px] lg:items-center lg:gap-5"
                   >
                     {/* PRODUCT */}
                     <div className="min-w-0">
                       <Link
                         href={`/admin/products/${row.productId}/edit`}
-                        className="block truncate text-[15px] font-semibold text-neutral-950 transition hover:text-[#17352c]"
+                        className="block break-words lg:truncate text-[15px] font-semibold text-neutral-950 transition hover:text-[#17352c]"
                       >
                         {
                           row.productName
@@ -587,13 +588,13 @@ export default async function InventoryPage({
 
                     {/* SKU */}
                     <div className="mt-3 min-w-0 lg:mt-0">
-                      <p className="block truncate font-mono text-xs text-neutral-600">
+                      <p className="block break-words lg:truncate font-mono text-xs text-neutral-600">
                         {row.sku}
                       </p>
                     </div>
 
                     {/* STOCK */}
-                    <div className="mt-3 lg:mt-0">
+                    <div className="mt-3 lg:mt-0"><p className="text-xs text-muted lg:hidden">Units in stock</p>
                       <p className="text-[15px] font-semibold tabular-nums text-neutral-950">
                         {
                           row.stock
@@ -662,7 +663,7 @@ export default async function InventoryPage({
         )}
       </div>
 
-      <p className="mt-3 text-xs text-neutral-400">
+      <p className="mt-3 text-xs text-neutral-500">
         Low stock is defined as 5 units
         or fewer. Products with variants
         are managed using their individual
@@ -696,7 +697,7 @@ function SummaryItem({
       </div>
 
       <div>
-        <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-neutral-400">
+        <p className="text-xs font-medium uppercase tracking-[0.1em] text-neutral-500">
           {label}
         </p>
 
@@ -737,7 +738,7 @@ function Heading({
   children: ReactNode;
 }) {
   return (
-    <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-neutral-400">
+    <p className="text-xs font-semibold uppercase tracking-[0.1em] text-neutral-500">
       {children}
     </p>
   );

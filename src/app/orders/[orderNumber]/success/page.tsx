@@ -139,7 +139,7 @@ export default async function OrderSuccessPage({
           />
         </div>
 
-        <p className="mt-6 text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-700">
+        <p className="mt-6 text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700">
           Order received
         </p>
 
@@ -156,7 +156,7 @@ export default async function OrderSuccessPage({
 
         <div className="mt-7 grid overflow-hidden rounded-xl border border-neutral-200 sm:grid-cols-3">
           <div className="border-b border-neutral-200 px-4 py-3 sm:border-b-0 sm:border-r">
-            <p className="text-[10px] font-medium uppercase tracking-wide text-neutral-400">
+            <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">
               Order number
             </p>
 
@@ -166,7 +166,7 @@ export default async function OrderSuccessPage({
           </div>
 
           <div className="border-b border-neutral-200 px-4 py-3 sm:border-b-0 sm:border-r">
-            <p className="text-[10px] font-medium uppercase tracking-wide text-neutral-400">
+            <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">
               Order status
             </p>
 
@@ -178,7 +178,7 @@ export default async function OrderSuccessPage({
           </div>
 
           <div className="px-4 py-3">
-            <p className="text-[10px] font-medium uppercase tracking-wide text-neutral-400">
+            <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">
               Payment
             </p>
 
@@ -219,7 +219,7 @@ export default async function OrderSuccessPage({
                     </p>
                   )}
 
-                  <p className="mt-1 text-xs text-neutral-400">
+                  <p className="mt-1 text-xs text-neutral-500">
                     SKU {item.sku}
                   </p>
                 </div>

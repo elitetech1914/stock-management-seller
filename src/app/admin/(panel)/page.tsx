@@ -426,7 +426,7 @@ export default async function AdminDashboardPage() {
       {/* HEADER */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-400">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
             Administration
           </p>
 
@@ -458,6 +458,50 @@ export default async function AdminDashboardPage() {
         </div>
       </div>
 
+      <h2 className="mt-7 text-base font-semibold">Needs attention</h2>
+      {/* OPERATIONAL METRICS */}
+      <div className="mt-4 grid gap-3 sm:grid-cols-3">
+        <CompactMetric
+          icon={
+            <ShoppingCart
+              size={15}
+            />
+          }
+          label="Open orders"
+          value={String(
+            openOrders
+          )}
+          href="/admin/orders"
+        />
+
+        <CompactMetric
+          icon={
+            <AlertTriangle
+              size={15}
+            />
+          }
+          label="Low stock"
+          value={String(
+            lowStockItems.length
+          )}
+          href="/admin/inventory?status=low"
+        />
+
+        <CompactMetric
+          icon={
+            <PackageX
+              size={15}
+            />
+          }
+          label="Out of stock"
+          value={String(
+            outOfStockItems.length
+          )}
+          href="/admin/inventory?status=out"
+        />
+      </div>
+
+      <h2 className="mt-7 text-base font-semibold">Store performance</h2>
       {/* PRIMARY METRICS */}
       <div className="mt-5 grid overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm sm:grid-cols-2 xl:grid-cols-4">
         <Metric
@@ -508,48 +552,6 @@ export default async function AdminDashboardPage() {
         />
       </div>
 
-      {/* OPERATIONAL METRICS */}
-      <div className="mt-4 grid gap-3 sm:grid-cols-3">
-        <CompactMetric
-          icon={
-            <ShoppingCart
-              size={15}
-            />
-          }
-          label="Open orders"
-          value={String(
-            openOrders
-          )}
-          href="/admin/orders"
-        />
-
-        <CompactMetric
-          icon={
-            <AlertTriangle
-              size={15}
-            />
-          }
-          label="Low stock"
-          value={String(
-            lowStockItems.length
-          )}
-          href="/admin/inventory?status=low"
-        />
-
-        <CompactMetric
-          icon={
-            <PackageX
-              size={15}
-            />
-          }
-          label="Out of stock"
-          value={String(
-            outOfStockItems.length
-          )}
-          href="/admin/inventory?status=out"
-        />
-      </div>
-
       {/* TOP CONTENT */}
       <div className="mt-5 grid items-stretch gap-5 xl:grid-cols-[minmax(0,1fr)_400px]">
         {/* RECENT ORDERS */}
@@ -574,7 +576,7 @@ export default async function AdminDashboardPage() {
             />
           ) : (
             <>
-              <div className="hidden grid-cols-[1.15fr_1.2fr_0.65fr_0.7fr] gap-5 border-b border-neutral-200 bg-[#fafaf8] px-5 py-3 lg:grid">
+              <div className="hidden grid-cols-[1.15fr_1.2fr_0.65fr_0.7fr] gap-5 border-b border-neutral-200 bg-background px-5 py-3 lg:grid">
                 <Heading>
                   Order
                 </Heading>
@@ -600,7 +602,7 @@ export default async function AdminDashboardPage() {
                         order.id
                       }
                       href={`/admin/orders/${order.id}`}
-                      className="block px-5 py-4 transition hover:bg-[#fafaf8] lg:grid lg:grid-cols-[1.15fr_1.2fr_0.65fr_0.7fr] lg:items-center lg:gap-5"
+                      className="block px-5 py-4 transition hover:bg-background lg:grid lg:grid-cols-[1.15fr_1.2fr_0.65fr_0.7fr] lg:items-center lg:gap-5"
                     >
                       <div className="min-w-0">
                         <p className="truncate text-sm font-semibold text-neutral-950">
@@ -609,7 +611,7 @@ export default async function AdminDashboardPage() {
                           }
                         </p>
 
-                        <p className="mt-1 text-[11px] text-neutral-400">
+                        <p className="mt-1 text-xs text-neutral-500">
                           {formatDate(
                             order.createdAt
                           )}
@@ -623,7 +625,7 @@ export default async function AdminDashboardPage() {
                             order.buyerEmail}
                         </p>
 
-                        <p className="mt-0.5 truncate text-[11px] text-neutral-400">
+                        <p className="mt-0.5 truncate text-xs text-neutral-500">
                           {
                             order.buyerEmail
                           }
@@ -692,7 +694,7 @@ export default async function AdminDashboardPage() {
                         ? "/admin/inventory?status=out"
                         : "/admin/inventory?status=low"
                     }
-                    className="flex items-center justify-between gap-5 px-5 py-4 transition hover:bg-[#fafaf8]"
+                    className="flex items-center justify-between gap-5 px-5 py-4 transition hover:bg-background"
                   >
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-semibold text-neutral-950">
@@ -701,7 +703,7 @@ export default async function AdminDashboardPage() {
                         }
                       </p>
 
-                      <p className="mt-1 truncate font-mono text-[11px] text-neutral-400">
+                      <p className="mt-1 truncate font-mono text-xs text-neutral-500">
                         {
                           item.sku
                         }
@@ -716,7 +718,7 @@ export default async function AdminDashboardPage() {
                       </p>
 
                       <p
-                        className={`mt-0.5 text-[10px] font-semibold ${
+                        className={`mt-0.5 text-xs font-semibold ${
                           item.stock ===
                           0
                             ? "text-red-600"
@@ -767,7 +769,7 @@ export default async function AdminDashboardPage() {
                       customer.id
                     }
                     href={`/admin/customers/${customer.id}`}
-                    className="flex items-center justify-between gap-6 px-5 py-4 transition hover:bg-[#fafaf8]"
+                    className="flex items-center justify-between gap-6 px-5 py-4 transition hover:bg-background"
                   >
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold text-neutral-950">
@@ -784,7 +786,7 @@ export default async function AdminDashboardPage() {
                     </div>
 
                     <div className="flex shrink-0 items-center gap-3">
-                      <p className="text-xs text-neutral-400">
+                      <p className="text-xs text-neutral-500">
                         {formatDate(
                           customer.createdAt
                         )}
@@ -870,7 +872,7 @@ function Metric({
       </div>
 
       <div className="min-w-0">
-        <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-neutral-400">
+        <p className="text-xs font-medium uppercase tracking-[0.1em] text-neutral-500">
           {label}
         </p>
 
@@ -896,7 +898,7 @@ function CompactMetric({
   return (
     <Link
       href={href}
-      className="group flex min-h-[72px] items-center justify-between rounded-xl border border-neutral-200 bg-white px-5 py-3.5 shadow-sm transition hover:border-neutral-300 hover:bg-[#fafaf8]"
+      className="group flex min-h-[72px] items-center justify-between rounded-xl border border-neutral-200 bg-white px-5 py-3.5 shadow-sm transition hover:border-neutral-300 hover:bg-background"
     >
       <div className="flex items-center gap-3">
         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#f5f4f0] text-neutral-500">
@@ -904,7 +906,7 @@ function CompactMetric({
         </div>
 
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-neutral-400">
+          <p className="text-xs font-semibold uppercase tracking-[0.08em] text-neutral-500">
             {label}
           </p>
 
@@ -971,7 +973,7 @@ function QuickAction({
   return (
     <Link
       href={href}
-      className="group flex items-center justify-between gap-4 rounded-lg px-3 py-2.5 transition hover:bg-[#fafaf8]"
+      className="group flex items-center justify-between gap-4 rounded-lg px-3 py-2.5 transition hover:bg-background"
     >
       <div className="min-w-0">
         <p className="text-sm font-semibold text-neutral-900">
@@ -1002,7 +1004,7 @@ function EmptyState({
 }) {
   return (
     <div className="flex min-h-[170px] flex-col items-center justify-center px-6 py-9 text-center">
-      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-100 text-neutral-400">
+      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-100 text-neutral-500">
         {icon}
       </div>
 
@@ -1023,7 +1025,7 @@ function Heading({
   children: ReactNode;
 }) {
   return (
-    <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-neutral-400">
+    <p className="text-xs font-semibold uppercase tracking-[0.1em] text-neutral-500">
       {children}
     </p>
   );

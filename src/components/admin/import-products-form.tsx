@@ -71,7 +71,7 @@ export function ImportProductsForm() {
 
         {/* FILE INPUT */}
         <div className="mt-6">
-          <label className="group flex cursor-pointer flex-wrap items-center gap-3 rounded-xl border border-dashed border-neutral-300 bg-neutral-50 p-3 transition hover:border-neutral-400 hover:bg-neutral-100/60 sm:gap-4 sm:p-5">
+          <label className="group flex cursor-pointer focus-within:outline-2 focus-within:outline-offset-4 focus-within:outline-brand flex-wrap items-center gap-3 rounded-xl border border-dashed border-neutral-300 bg-neutral-50 p-3 transition hover:border-neutral-400 hover:bg-neutral-100/60 sm:gap-4 sm:p-5">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-neutral-200 bg-white text-[#17352c] shadow-sm">
               <FileSpreadsheet
                 size={19}
@@ -125,7 +125,7 @@ export function ImportProductsForm() {
 
         {/* SUBMIT */}
         <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-neutral-100 pt-5">
-          <p className="text-xs text-neutral-400">
+          <p className="text-xs text-neutral-500">
             Large catalogs may take a
             moment to process.
           </p>
@@ -160,7 +160,7 @@ export function ImportProductsForm() {
 
       {/* IMPORT RESULT */}
       {state.message && (
-        <section
+        <section role={state.success ? "status" : "alert"}
           className={`rounded-2xl border p-5 ${
             state.success
               ? "border-emerald-200 bg-emerald-50"
@@ -271,7 +271,7 @@ export function ImportProductsForm() {
           {state.errors.length >
             0 && (
             <div className="mt-5 rounded-xl border border-black/5 bg-white/70 p-4">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-neutral-500">
+              <p className="text-xs font-semibold uppercase tracking-[0.1em] text-neutral-500">
                 Import errors
               </p>
 
@@ -311,7 +311,7 @@ function Result({
 }) {
   return (
     <div className="rounded-xl border border-black/5 bg-white/70 px-4 py-3">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-neutral-500">
+      <p className="text-xs font-semibold uppercase tracking-[0.08em] text-neutral-500">
         {label}
       </p>
 

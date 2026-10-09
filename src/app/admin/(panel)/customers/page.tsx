@@ -116,7 +116,7 @@ export default async function AdminCustomersPage() {
     <div className="mx-auto w-full max-w-[1500px] px-4 py-5 sm:px-6 lg:px-8">
       {/* HEADER */}
       <div className="mb-5">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-400">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
           Customer management
         </p>
 
@@ -178,7 +178,7 @@ export default async function AdminCustomersPage() {
         </div>
       ) : (
         <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
-          <div className="hidden grid-cols-[1.4fr_1.6fr_0.65fr_0.85fr_0.9fr_28px] gap-4 border-b border-neutral-200 bg-[#fafaf8] px-6 py-3.5 lg:grid">
+          <div className="hidden grid-cols-[1.4fr_1.6fr_0.65fr_0.85fr_0.9fr_28px] gap-4 border-b border-neutral-200 bg-background px-6 py-3.5 lg:grid">
             <Heading>Customer</Heading>
             <Heading>Email</Heading>
             <Heading>Orders</Heading>
@@ -187,12 +187,12 @@ export default async function AdminCustomersPage() {
             <div />
           </div>
 
-          <div className="divide-y divide-neutral-100">
+          <div className="grid gap-3 bg-background p-3 lg:block lg:divide-y lg:divide-neutral-100 lg:bg-white lg:p-0">
             {customers.map((customer) => (
               <Link
                 key={customer.id}
                 href={`/admin/customers/${customer.id}`}
-                className="group block px-6 py-5 transition hover:bg-[#fafaf8] lg:grid lg:grid-cols-[1.4fr_1.6fr_0.65fr_0.85fr_0.9fr_28px] lg:items-center lg:gap-4"
+                className="group block rounded-xl border border-border bg-white px-4 py-4 transition hover:bg-background lg:rounded-none lg:border-0 lg:px-5 lg:grid lg:grid-cols-[1.4fr_1.6fr_0.65fr_0.85fr_0.9fr_28px] lg:items-center lg:gap-4"
               >
                 <div className="flex min-w-0 items-center gap-3">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#f5f4f0] text-neutral-500">
@@ -200,11 +200,11 @@ export default async function AdminCustomersPage() {
                   </div>
 
                   <div className="min-w-0">
-                    <p className="truncate text-[15px] font-semibold text-neutral-950">
+                    <p className="break-words lg:truncate text-[15px] font-semibold text-neutral-950">
                       {customer.name}
                     </p>
 
-                    <p className="mt-0.5 text-xs text-neutral-400">
+                    <p className="mt-0.5 text-xs text-neutral-500">
                       Joined{" "}
                       {formatDate(
                         customer.createdAt
@@ -214,13 +214,14 @@ export default async function AdminCustomersPage() {
                 </div>
 
                 <div className="mt-3 min-w-0 lg:mt-0">
-                  <p className="truncate text-sm text-neutral-700">
+                  <p className="break-words lg:truncate text-sm text-neutral-700">
                     {customer.email}
                   </p>
                 </div>
 
                 <div className="mt-3 lg:mt-0">
-                  <p className="text-[15px] font-semibold text-neutral-950">
+                  <p className="text-xs text-muted lg:hidden">Orders</p>
+                  <p className="text-[15px] font-semibold tabular-nums text-neutral-950">
                     {Number(
                       customer.totalOrders
                     )}
@@ -228,7 +229,8 @@ export default async function AdminCustomersPage() {
                 </div>
 
                 <div className="mt-3 lg:mt-0">
-                  <p className="text-[15px] font-semibold text-neutral-950">
+                  <p className="text-xs text-muted lg:hidden">Paid spend</p>
+                  <p className="text-[15px] font-semibold tabular-nums text-neutral-950">
                     {formatMoney(
                       Number(
                         customer.paidSpendCents
@@ -238,6 +240,7 @@ export default async function AdminCustomersPage() {
                 </div>
 
                 <div className="mt-3 lg:mt-0">
+                  <p className="text-xs text-muted lg:hidden">Last order</p>
                   <p className="text-sm text-neutral-600">
                     {formatDate(
                       customer.latestOrderAt
@@ -284,7 +287,7 @@ function SummaryItem({
       </div>
 
       <div>
-        <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-neutral-400">
+        <p className="text-xs font-medium uppercase tracking-[0.1em] text-neutral-500">
           {label}
         </p>
 
@@ -302,7 +305,7 @@ function Heading({
   children: React.ReactNode;
 }) {
   return (
-    <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-neutral-400">
+    <p className="text-xs font-semibold uppercase tracking-[0.1em] text-neutral-500">
       {children}
     </p>
   );

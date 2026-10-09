@@ -1,6 +1,5 @@
 import {
   CheckCircle2,
-  Download,
   Info,
 } from "lucide-react";
 
@@ -133,7 +132,7 @@ function Column({
         className={`text-xs ${
           required
             ? "font-medium text-red-600"
-            : "text-neutral-400"
+            : "text-neutral-500"
         }`}
       >
         {required

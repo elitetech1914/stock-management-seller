@@ -136,7 +136,7 @@ export default async function BuyerOrderPage({
       {/* HEADER */}
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-400">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
             Order
           </p>
 
@@ -223,7 +223,7 @@ export default async function BuyerOrderPage({
                         </p>
                       )}
 
-                      <p className="mt-1 text-xs text-neutral-400">
+                      <p className="mt-1 text-xs text-neutral-500">
                         SKU {item.sku}
                       </p>
                     </div>
@@ -254,7 +254,7 @@ export default async function BuyerOrderPage({
               <div className="flex items-center gap-2">
                 <Building2
                   size={15}
-                  className="text-neutral-400"
+                  className="text-neutral-500"
                 />
 
                 <h2 className="font-semibold text-neutral-950">
@@ -291,7 +291,7 @@ export default async function BuyerOrderPage({
               <div className="flex items-center gap-2">
                 <MapPin
                   size={15}
-                  className="text-neutral-400"
+                  className="text-neutral-500"
                 />
 
                 <h2 className="font-semibold text-neutral-950">
@@ -392,7 +392,7 @@ export default async function BuyerOrderPage({
             </div>
 
             <div className="mt-5 border-t border-neutral-200 pt-4">
-              <p className="text-[10px] font-medium uppercase tracking-wide text-neutral-400">
+              <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">
                 Current status
               </p>
 

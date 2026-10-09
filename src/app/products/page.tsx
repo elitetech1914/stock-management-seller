@@ -63,7 +63,7 @@ export default async function ProductsPage({
     <main className="min-h-screen bg-white">
       <section className="mx-auto max-w-[1500px] px-4 sm:px-6 py-8 lg:px-8 lg:py-10">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-neutral-400">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-neutral-500">
             Wholesale catalog
           </p>
 

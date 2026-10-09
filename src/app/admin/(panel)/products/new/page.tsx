@@ -1,3 +1,4 @@
+import { SubmitButton } from "@/components/ui/submit-button";
 import Link from "next/link";
 import { asc } from "drizzle-orm";
 import { ArrowLeft } from "lucide-react";
@@ -164,12 +165,12 @@ export default async function NewProductPage() {
             </h2>
 
             <p className="mt-1 text-sm leading-6 text-neutral-500">
-              Enter one image URL per line. We will
-              add direct file uploads to Cloudflare
-              R2 later.
+              Enter one image URL per line. You can copy uploaded image URLs from Bulk Images.
             </p>
 
+            <label htmlFor="imageUrls" className="ui-label mt-5">Image URLs</label>
             <textarea
+              id="imageUrls"
               name="imageUrls"
               rows={6}
               placeholder={`https://example.com/image-1.jpg\nhttps://example.com/image-2.jpg`}
@@ -211,12 +212,9 @@ export default async function NewProductPage() {
             </div>
           </section>
 
-          <button
-            type="submit"
+          <SubmitButton
             className="h-12 w-full rounded-xl bg-[#17352c] text-sm font-semibold text-white transition hover:bg-[#24483d]"
-          >
-            Create product
-          </button>
+           pendingLabel="Creating product...">Create product</SubmitButton>
         </div>
       </form>
     </div>

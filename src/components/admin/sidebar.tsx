@@ -109,15 +109,16 @@ export function AdminSidebar() {
           Stockmora
         </Link>
 
-        <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.14em] text-neutral-400">
+        <p className="mt-1 text-xs font-medium uppercase tracking-[0.14em] text-neutral-500">
           Administration
         </p>
       </div>
 
       {/* NAVIGATION */}
-      <nav className="flex-1 overflow-y-auto px-4 py-4">
-        <div className="space-y-1">
-          {navigation.map((item) => {
+      <nav aria-label="Admin navigation" className="flex-1 space-y-5 overflow-y-auto px-4 py-5">
+        {[{ label: "Workspace", items: navigation.slice(0, 1) }, { label: "Catalog", items: navigation.slice(1, 6) }, { label: "Sales", items: navigation.slice(6) }].map((group) => <div key={group.label} className="space-y-1">
+          <p className="ui-eyebrow px-3 pb-2">{group.label}</p>
+          {group.items.map((item) => {
             const Icon =
               item.icon;
 
@@ -134,7 +135,7 @@ export function AdminSidebar() {
                 aria-current={active ? "page" : undefined}
                 className={`flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium transition ${
                   active
-                    ? "bg-[#f3f2ee] text-[#17352c]"
+                    ? "bg-[#eaf0e7] text-[#17352c]"
                     : "text-neutral-700 hover:bg-neutral-50 hover:text-neutral-950"
                 }`}
               >
@@ -154,7 +155,7 @@ export function AdminSidebar() {
               </Link>
             );
           })}
-        </div>
+        </div>)}
       </nav>
 
       {/* BOTTOM */}

@@ -398,7 +398,7 @@ export default async function AnalyticsPage() {
     <div className="mx-auto w-full max-w-[1500px] px-4 py-5 sm:px-6 lg:px-8">
       {/* HEADER */}
       <div>
-        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-400">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
           Reporting
         </p>
 
@@ -504,13 +504,13 @@ export default async function AnalyticsPage() {
                       className="flex h-full min-w-0 flex-1 flex-col justify-end"
                     >
                       <div className="mb-2 text-center">
-                        <p className="truncate text-[11px] font-semibold text-neutral-700">
+                        <p className="truncate text-xs font-semibold text-neutral-700">
                           {formatCompactMoney(
                             month.revenue
                           )}
                         </p>
 
-                        <p className="mt-0.5 text-[9px] text-neutral-400">
+                        <p className="mt-0.5 text-xs text-neutral-500">
                           {
                             month.orders
                           }{" "}
@@ -530,7 +530,7 @@ export default async function AnalyticsPage() {
                         />
                       </div>
 
-                      <p className="py-3 text-center text-[11px] font-medium text-neutral-500">
+                      <p className="py-3 text-center text-xs font-medium text-neutral-500">
                         {
                           month.label
                         }
@@ -629,7 +629,7 @@ export default async function AnalyticsPage() {
           {topProducts.length ===
           0 ? (
             <div className="flex min-h-[220px] flex-col items-center justify-center px-6 py-10 text-center">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-100 text-neutral-400">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-100 text-neutral-500">
                 <Package
                   size={18}
                 />
@@ -647,7 +647,7 @@ export default async function AnalyticsPage() {
             </div>
           ) : (
             <>
-              <div className="hidden grid-cols-[minmax(0,1fr)_160px_110px_130px] gap-5 border-b border-neutral-200 bg-[#fafaf8] px-5 py-3.5 lg:grid">
+              <div className="hidden grid-cols-[minmax(0,1fr)_160px_110px_130px] gap-5 border-b border-neutral-200 bg-background px-5 py-3.5 lg:grid">
                 <Heading>
                   Product
                 </Heading>
@@ -684,7 +684,7 @@ export default async function AnalyticsPage() {
                       </div>
 
                       <div className="mt-2 min-w-0 lg:mt-0">
-                        <p className="truncate font-mono text-[11px] text-neutral-500">
+                        <p className="truncate font-mono text-xs text-neutral-500">
                           {product.sku ||
                             "—"}
                         </p>
@@ -774,7 +774,7 @@ export default async function AnalyticsPage() {
         </section>
       </div>
 
-      <p className="mt-4 text-xs text-neutral-400">
+      <p className="mt-4 text-xs text-neutral-500">
         Revenue analytics use
         orders marked as paid.
         Cancelled or unpaid orders
@@ -809,7 +809,7 @@ function Metric({
       </div>
 
       <div className="min-w-0">
-        <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-neutral-400">
+        <p className="text-xs font-medium uppercase tracking-[0.1em] text-neutral-500">
           {label}
         </p>
 
@@ -875,7 +875,7 @@ function Heading({
   children: ReactNode;
 }) {
   return (
-    <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-neutral-400">
+    <p className="text-xs font-semibold uppercase tracking-[0.1em] text-neutral-500">
       {children}
     </p>
   );

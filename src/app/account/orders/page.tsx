@@ -108,7 +108,7 @@ export default async function AccountOrdersPage() {
       </Link>
 
       <div className="mb-6">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-400">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
           Buyer account
         </p>
 
@@ -126,7 +126,7 @@ export default async function AccountOrdersPage() {
         <div className="rounded-xl border border-neutral-200 bg-white px-6 py-14 text-center shadow-sm">
           <PackageCheck
             size={22}
-            className="mx-auto text-neutral-400"
+            className="mx-auto text-neutral-500"
           />
 
           <h2 className="mt-4 font-semibold text-neutral-950">
@@ -147,7 +147,7 @@ export default async function AccountOrdersPage() {
         </div>
       ) : (
         <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
-          <div className="hidden grid-cols-[1.4fr_0.7fr_0.8fr_0.8fr] gap-4 border-b border-neutral-200 bg-[#fafaf8] px-5 py-3 text-[10px] font-semibold uppercase tracking-[0.1em] text-neutral-400 sm:grid">
+          <div className="hidden grid-cols-[1.4fr_0.7fr_0.8fr_0.8fr] gap-4 border-b border-neutral-200 bg-background px-5 py-3 text-xs font-semibold uppercase tracking-[0.1em] text-neutral-500 sm:grid">
             <div>Order</div>
             <div>Total</div>
             <div>Status</div>
@@ -160,7 +160,7 @@ export default async function AccountOrdersPage() {
                 <Link
                   key={order.id}
                   href={`/account/orders/${order.orderNumber}`}
-                  className="block px-5 py-5 transition hover:bg-[#fafaf8] sm:grid sm:grid-cols-[1.4fr_0.7fr_0.8fr_0.8fr] sm:items-center sm:gap-4"
+                  className="block px-5 py-5 transition hover:bg-background sm:grid sm:grid-cols-[1.4fr_0.7fr_0.8fr_0.8fr] sm:items-center sm:gap-4"
                 >
                   <div>
                     <p className="text-[15px] font-semibold text-neutral-950">
@@ -169,7 +169,7 @@ export default async function AccountOrdersPage() {
                       }
                     </p>
 
-                    <p className="mt-1 text-xs text-neutral-400">
+                    <p className="mt-1 text-xs text-neutral-500">
                       {formatDate(
                         order.createdAt
                       )}

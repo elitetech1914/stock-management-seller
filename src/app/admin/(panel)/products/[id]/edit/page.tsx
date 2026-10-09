@@ -1,3 +1,4 @@
+import { SubmitButton } from "@/components/ui/submit-button";
 import Link from "next/link";
 import { asc, eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
@@ -282,7 +283,9 @@ export default async function EditProductPage({
               One image URL per line.
             </p>
 
+            <label htmlFor="imageUrls" className="ui-label mt-5">Image URLs</label>
             <textarea
+              id="imageUrls"
               name="imageUrls"
               rows={6}
               defaultValue={images
@@ -378,12 +381,9 @@ export default async function EditProductPage({
             </p>
           </section>
 
-          <button
-            type="submit"
+          <SubmitButton
             className="h-12 w-full rounded-xl bg-[#17352c] text-sm font-semibold text-white transition hover:bg-[#24483d]"
-          >
-            Save changes
-          </button>
+           pendingLabel="Saving...">Save changes</SubmitButton>
         </div>
       </form>
 
@@ -401,8 +401,9 @@ export default async function EditProductPage({
             </p>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[900px] text-left text-sm">
+          <div className="grid gap-3 bg-background p-3 lg:hidden">{variants.map((variant) => <article key={variant.id} className="ui-panel p-4"><h3 className="break-words font-semibold">{variant.sku}</h3><p className="mt-2 break-words text-sm text-muted">{[variant.option1Name && variant.option1Value ? variant.option1Name + ": " + variant.option1Value : null, variant.option2Name && variant.option2Value ? variant.option2Name + ": " + variant.option2Value : null, variant.option3Name && variant.option3Value ? variant.option3Name + ": " + variant.option3Value : null].filter(Boolean).join(" / ") || "Default"}</p><dl className="mt-4 grid grid-cols-2 gap-4 text-sm"><div><dt className="text-xs text-muted">Wholesale</dt><dd className="mt-1 font-semibold tabular-nums">{formatMoney(variant.wholesalePriceCents)}</dd></div><div><dt className="text-xs text-muted">MSRP</dt><dd className="mt-1 tabular-nums">{formatMoney(variant.retailPriceCents)}</dd></div><div><dt className="text-xs text-muted">Stock</dt><dd className="mt-1">{variant.stockQuantity} units</dd></div></dl></article>)}</div>
+          <div className="hidden overflow-x-auto lg:block">
+            <table className="w-full min-w-[750px] text-left text-sm">
               <thead className="border-b border-neutral-200 bg-neutral-50 text-xs uppercase tracking-wide text-neutral-500">
                 <tr>
                   <th className="px-6 py-4 font-medium">

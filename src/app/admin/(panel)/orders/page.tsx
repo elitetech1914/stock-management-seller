@@ -101,7 +101,7 @@ export default async function AdminOrdersPage() {
     <div className="mx-auto w-full max-w-[1500px] px-4 py-5 sm:px-6 lg:px-8">
       {/* HEADER */}
       <div className="mb-5">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-400">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
           Order management
         </p>
 
@@ -165,7 +165,7 @@ export default async function AdminOrdersPage() {
       ) : (
         <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
           {/* HEADER */}
-          <div className="hidden grid-cols-[1.45fr_1.5fr_0.7fr_0.85fr_0.8fr] gap-4 border-b border-neutral-200 bg-[#fafaf8] px-6 py-3.5 lg:grid">
+          <div className="hidden grid-cols-[1.45fr_1.5fr_0.7fr_0.85fr_0.8fr] gap-4 border-b border-neutral-200 bg-background px-6 py-3.5 lg:grid">
             <TableHeading>
               Order
             </TableHeading>
@@ -174,9 +174,7 @@ export default async function AdminOrdersPage() {
               Customer
             </TableHeading>
 
-            <TableHeading>
-              Total
-            </TableHeading>
+            <div className="text-right"><TableHeading>Total</TableHeading></div>
 
             <TableHeading>
               Status
@@ -187,13 +185,13 @@ export default async function AdminOrdersPage() {
             </TableHeading>
           </div>
 
-          <div className="divide-y divide-neutral-100">
+          <div className="grid gap-3 bg-background p-3 lg:block lg:divide-y lg:divide-neutral-100 lg:bg-white lg:p-0">
             {orderList.map(
               (order) => (
                 <Link
                   key={order.id}
                   href={`/admin/orders/${order.id}`}
-                  className="block px-6 py-5 transition hover:bg-[#fafaf8] lg:grid lg:grid-cols-[1.45fr_1.5fr_0.7fr_0.85fr_0.8fr] lg:items-center lg:gap-4"
+                  className="block rounded-xl border border-border bg-white px-4 py-4 transition hover:bg-background lg:rounded-none lg:border-0 lg:px-5 lg:grid lg:grid-cols-[1.45fr_1.5fr_0.7fr_0.85fr_0.8fr] lg:items-center lg:gap-4"
                 >
                   {/* ORDER */}
                   <div>
@@ -201,7 +199,7 @@ export default async function AdminOrdersPage() {
                       {order.orderNumber}
                     </p>
 
-                    <p className="mt-1 text-xs text-neutral-400">
+                    <p className="mt-1 text-xs text-neutral-500">
                       {formatDate(
                         order.createdAt
                       )}
@@ -210,7 +208,7 @@ export default async function AdminOrdersPage() {
 
                   {/* CUSTOMER */}
                   <div className="mt-3 min-w-0 lg:mt-0">
-                    <p className="truncate text-[15px] font-medium text-neutral-900">
+                    <p className="break-words lg:truncate text-[15px] font-medium text-neutral-900">
                       {
                         order.companyName
                       }
@@ -228,7 +226,7 @@ export default async function AdminOrdersPage() {
                   </div>
 
                   {/* TOTAL */}
-                  <div className="mt-3 lg:mt-0">
+                  <div className="mt-3 lg:mt-0 lg:text-right"><p className="text-xs text-muted lg:hidden">Total</p>
                     <p className="text-[15px] font-semibold text-neutral-950">
                       {formatMoney(
                         order.totalCents
@@ -237,7 +235,7 @@ export default async function AdminOrdersPage() {
                   </div>
 
                   {/* STATUS */}
-                  <div className="mt-3 lg:mt-0">
+                  <div className="mt-3 lg:mt-0"><p className="mb-1 text-xs text-muted lg:hidden">Order status</p>
                     <span
                       className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${statusClasses(
                         order.orderStatus
@@ -250,13 +248,13 @@ export default async function AdminOrdersPage() {
                   </div>
 
                   {/* PAYMENT */}
-                  <div className="mt-3 lg:mt-0">
+                  <div className="mt-3 lg:mt-0"><p className="mb-1 text-xs text-muted lg:hidden">Payment</p>
                     <span
                       className={
                         order.paymentStatus ===
                         "paid"
-                          ? "inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700"
-                          : "inline-flex rounded-full border border-neutral-200 bg-neutral-50 px-2.5 py-1 text-[11px] font-semibold text-neutral-600"
+                          ? "inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700"
+                          : "inline-flex rounded-full border border-neutral-200 bg-neutral-50 px-2.5 py-1 text-xs font-semibold text-neutral-600"
                       }
                     >
                       {formatStatus(
@@ -298,7 +296,7 @@ function SummaryItem({
       </div>
 
       <div>
-        <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-neutral-400">
+        <p className="text-xs font-medium uppercase tracking-[0.1em] text-neutral-500">
           {label}
         </p>
 
@@ -316,7 +314,7 @@ function TableHeading({
   children: React.ReactNode;
 }) {
   return (
-    <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-neutral-400">
+    <p className="text-xs font-semibold uppercase tracking-[0.1em] text-neutral-500">
       {children}
     </p>
   );

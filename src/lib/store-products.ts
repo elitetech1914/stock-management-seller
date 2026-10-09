@@ -26,7 +26,7 @@ export type StoreProduct = {
 export async function getStoreProducts(
   limit?: number
 ): Promise<StoreProduct[]> {
-  let query = db
+  const query = db
     .select({
       id: products.id,
       slug: products.slug,

@@ -70,7 +70,7 @@ export default async function CategoryPage({
       <section className="mx-auto max-w-[1500px] px-4 sm:px-6 py-8 lg:px-8 lg:py-10">
         <div className="flex flex-col gap-5 border-b border-neutral-200 pb-7 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-neutral-400">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-neutral-500">
               Category
             </p>
 
@@ -86,8 +86,10 @@ export default async function CategoryPage({
             </p>
           </div>
 
-          <form method="GET" className="flex min-w-0 items-center gap-2">
+          <form method="GET" className="flex min-w-0 flex-wrap items-center gap-2">
+            <label htmlFor="category-sort" className="w-full text-sm font-medium">Sort by</label>
             <select
+              id="category-sort"
               name="sort"
               defaultValue={sort}
               onChange={undefined}

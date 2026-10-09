@@ -3,7 +3,9 @@
 /* eslint-disable @next/next/no-img-element */
 
 import Link from "next/link";
-import { Heart } from "lucide-react";
+import { Heart, ImageIcon } from "lucide-react";
+
+import { useSavedProducts } from "@/lib/saved-products";
 
 type ProductCardProduct = {
   id: string;
@@ -37,28 +39,32 @@ export function ProductCard({
 }: {
   product: ProductCardProduct;
 }) {
+  const { isSaved, toggle } = useSavedProducts();
+  const saved = isSaved(product.id);
   return (
-    <article className="group flex h-full flex-col">
+    <article className="group flex h-full min-w-0 flex-col">
       {/* PRODUCT IMAGE */}
       <div className="relative">
         <Link
           href={`/products/${product.slug}`}
           className="block"
         >
-          <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-[#f1f0ec]">
+          <div className="relative aspect-[4/5] overflow-hidden rounded-2xl border border-border bg-background">
             {product.imageUrl ? (
               <img
                 src={product.imageUrl}
                 alt={product.title}
-                className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                loading="lazy"
+                className="h-full w-full object-contain p-3 transition duration-300 motion-safe:group-hover:scale-[1.03]"
               />
             ) : (
-              <div className="flex h-full items-center justify-center px-6 text-center text-sm text-neutral-400">
-                No product image
+              <div className="flex h-full flex-col items-center justify-center gap-2 px-4 text-center text-xs text-muted">
+                <ImageIcon size={28} strokeWidth={1.2} aria-hidden="true" />
+                Image unavailable
               </div>
             )}
 
-            <div className="absolute bottom-3 left-3 rounded-full bg-white px-3 py-1.5 text-xs font-medium shadow-sm">
+            <div className="absolute bottom-2 left-2 max-w-[calc(100%-1rem)] rounded-lg bg-white px-2 py-1.5 text-xs font-medium shadow-sm">
               MOQ{" "}
               {
                 product.minimumOrderQuantity
@@ -70,16 +76,17 @@ export function ProductCard({
         {/* SAVE */}
         <button
           type="button"
-          aria-label="Save product"
+          aria-label={(saved ? "Remove from saved: " : "Save ") + product.title}
+          aria-pressed={saved}
           onClick={(event) => {
             event.preventDefault();
             event.stopPropagation();
 
-            // Wishlist handled separately
+            toggle(product);
           }}
-          className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 shadow-sm transition hover:bg-white"
+          className={"absolute right-2 top-2 z-10 flex h-11 w-11 items-center justify-center rounded-full border shadow-sm transition " + (saved ? "border-brand bg-brand text-white hover:bg-[#24483d]" : "border-border bg-white text-brand hover:bg-background")}
         >
-          <Heart size={17} />
+          <Heart size={18} fill={saved ? "currentColor" : "none"} />
         </button>
       </div>
 
@@ -107,7 +114,7 @@ export function ProductCard({
             vertical space, even if a
             product has no brand.
         */}
-        <p className="mt-1 min-h-4 truncate text-xs leading-4 text-neutral-400">
+        <p className="mt-1 min-h-4 truncate text-xs leading-4 text-muted">
           {product.brand ?? ""}
         </p>
 
@@ -119,7 +126,7 @@ export function ProductCard({
         <div className="mt-auto flex flex-wrap items-end justify-between gap-x-3 gap-y-2 pt-3">
           {/* WHOLESALE */}
           <div>
-            <p className="text-lg font-semibold">
+            <p className="text-lg font-semibold tabular-nums tracking-tight">
               {formatMoney(
                 product.wholesalePriceCents
               )}
@@ -142,8 +149,8 @@ export function ProductCard({
             <p
               className={`mt-1 text-xs ${
                 product.stockQuantity > 0
-                  ? "text-emerald-600"
-                  : "text-red-500"
+                  ? "text-emerald-700"
+                  : "text-red-700"
               }`}
             >
               {product.stockQuantity > 0

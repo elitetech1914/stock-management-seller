@@ -24,7 +24,7 @@ export default async function CheckoutPage() {
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-7 sm:px-6 lg:px-8">
       <div className="mb-6">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-neutral-500">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
           Wholesale checkout
         </p>
 

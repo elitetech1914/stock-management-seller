@@ -123,8 +123,18 @@ export default async function ProductsPage() {
           </div>
         ) : (
           /* TABLE */
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[1000px] text-left text-sm">
+          <>
+          <div className="grid gap-3 bg-background p-3 lg:hidden">
+            {productList.map((product) => <article key={product.id} className="ui-panel p-4">
+              <div className="flex items-start justify-between gap-3"><Link href={"/admin/products/" + product.id + "/edit"} className="min-w-0 break-words text-base font-semibold text-brand">{product.title}</Link><span className={"shrink-0 rounded-full px-2 py-1 text-xs font-medium " + (product.isActive ? "bg-emerald-50 text-emerald-700" : "bg-neutral-100 text-neutral-700")}>{product.isActive ? "Active" : "Archived"}</span></div>
+              <p className="mt-2 break-words text-xs text-muted">SKU: {product.sku}</p>{product.brand && <p className="mt-1 break-words text-xs text-muted">{product.brand}</p>}
+              <p className="mt-3 text-sm text-muted">{product.categoryName ?? "No category"}</p>
+              <dl className="mt-4 grid grid-cols-2 gap-4 border-y border-border py-3 text-sm"><div><dt className="text-xs text-muted">Wholesale</dt><dd className="mt-1 font-semibold tabular-nums">{formatMoney(product.wholesalePriceCents)}</dd></div><div><dt className="text-xs text-muted">MSRP</dt><dd className="mt-1 tabular-nums">{formatMoney(product.retailPriceCents)}</dd></div><div className="col-span-2"><dt className="text-xs text-muted">Stock</dt><dd className="mt-1 font-medium">{product.stockQuantity} units{product.stockQuantity === 0 ? " - Out of stock" : product.stockQuantity <= 10 ? " - Low stock" : ""}</dd></div></dl>
+              <div className="mt-3"><ProductActions product={product} /></div>
+            </article>)}
+          </div>
+          <div className="hidden overflow-x-auto lg:block">
+            <table className="w-full min-w-[850px] text-left text-sm">
               <thead className="border-b border-neutral-200 bg-neutral-50 text-xs uppercase tracking-wide text-neutral-500">
                 <tr>
                   <th className="px-6 py-4 font-medium">
@@ -135,15 +145,15 @@ export default async function ProductsPage() {
                     Category
                   </th>
 
-                  <th className="px-6 py-4 font-medium">
+                  <th className="px-6 py-4 text-right font-medium">
                     Wholesale
                   </th>
 
-                  <th className="px-6 py-4 font-medium">
+                  <th className="px-6 py-4 text-right font-medium">
                     MSRP
                   </th>
 
-                  <th className="px-6 py-4 font-medium">
+                  <th className="px-6 py-4 text-right font-medium">
                     Stock
                   </th>
 
@@ -170,12 +180,12 @@ export default async function ProductsPage() {
                           {product.title}
                         </p>
 
-                        <p className="mt-1 text-xs text-neutral-400">
+                        <p className="mt-1 text-xs text-neutral-500">
                           SKU: {product.sku}
                         </p>
 
                         {product.brand && (
-                          <p className="mt-1 text-xs text-neutral-400">
+                          <p className="mt-1 text-xs text-neutral-500">
                             {product.brand}
                           </p>
                         )}
@@ -188,21 +198,21 @@ export default async function ProductsPage() {
                       </td>
 
                       {/* WHOLESALE */}
-                      <td className="px-6 py-4 font-medium">
+                      <td className="px-6 py-4 text-right font-medium">
                         {formatMoney(
                           product.wholesalePriceCents
                         )}
                       </td>
 
                       {/* MSRP */}
-                      <td className="px-6 py-4 text-neutral-600">
+                      <td className="px-6 py-4 text-right text-neutral-600">
                         {formatMoney(
                           product.retailPriceCents
                         )}
                       </td>
 
                       {/* STOCK */}
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 text-right">
                         <span
                           className={
                             product.stockQuantity === 0
@@ -233,51 +243,7 @@ export default async function ProductsPage() {
 
                       {/* ACTIONS */}
                       <td className="px-6 py-4">
-                        <div className="flex items-center gap-1">
-                          {/* EDIT */}
-                          <Link
-                            href={`/admin/products/${product.id}/edit`}
-                            title="Edit product"
-                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-neutral-400 transition hover:bg-neutral-100 hover:text-black"
-                          >
-                            <Pencil size={16} />
-                          </Link>
-
-                          {/* ARCHIVE */}
-                          {product.isActive && (
-                            <form
-                              action={
-                                archiveProduct
-                              }
-                            >
-                              <input
-                                type="hidden"
-                                name="id"
-                                value={
-                                  product.id
-                                }
-                              />
-
-                              <button
-                                type="submit"
-                                title="Archive product"
-                                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-neutral-400 transition hover:bg-amber-50 hover:text-amber-600"
-                              >
-                                <Archive
-                                  size={16}
-                                />
-                              </button>
-                            </form>
-                          )}
-
-                          {/* DELETE */}
-                          <DeleteProductButton
-                            id={product.id}
-                            title={
-                              product.title
-                            }
-                          />
-                        </div>
+                        <ProductActions product={product} />
                       </td>
                     </tr>
                   )
@@ -285,8 +251,16 @@ export default async function ProductsPage() {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </section>
     </div>
   );
+}
+function ProductActions({ product }: { product: { id: string; title: string; isActive: boolean } }) {
+  return <div className="flex flex-wrap items-center gap-2">
+    <Link href={"/admin/products/" + product.id + "/edit"} aria-label={"Edit " + product.title} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-border px-3 text-xs font-medium text-brand hover:bg-background"><Pencil size={15} />Edit</Link>
+    {product.isActive && <form action={archiveProduct}><input type="hidden" name="id" value={product.id} /><button type="submit" aria-label={"Archive " + product.title} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-lg px-2 text-xs font-medium text-muted hover:bg-amber-50 hover:text-amber-800"><Archive size={15} />Archive</button></form>}
+    <DeleteProductButton id={product.id} title={product.title} />
+  </div>;
 }

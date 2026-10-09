@@ -374,7 +374,7 @@ export function ProductDetail({
                   : "md:col-span-2"
               }`}
             >
-              <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-[#f3f2ee] sm:aspect-auto sm:h-[460px] lg:h-[500px]">
+              <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-background sm:aspect-auto sm:h-[460px] lg:h-[500px]">
                 {mainImage ? (
                   <img
                     src={
@@ -386,7 +386,7 @@ export function ProductDetail({
                     className="absolute inset-0 h-full w-full object-cover object-center"
                   />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center text-sm text-neutral-400">
+                  <div className="flex h-full w-full items-center justify-center text-sm text-neutral-500">
                     No product image
                   </div>
                 )}
@@ -400,7 +400,7 @@ export function ProductDetail({
           <div>
             {/* CATEGORY + SAVE */}
             <div className="flex items-center justify-between gap-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-neutral-500">
+              <p className="text-xs font-semibold uppercase tracking-[0.15em] text-neutral-500">
                 {product.categoryName ??
                   "Wholesale product"}
               </p>
@@ -453,7 +453,7 @@ export function ProductDetail({
             )}
 
             {/* PRICE */}
-            <div className="mt-5 flex items-end gap-4">
+            <div className="mt-5 flex flex-wrap items-end gap-4">
               <div>
                 <p className="text-2xl font-semibold tracking-[-0.03em]">
                   {formatMoney(
@@ -480,7 +480,7 @@ export function ProductDetail({
             {/* SKU + STOCK */}
             <div className="mt-4 flex flex-wrap items-center gap-3 border-y border-neutral-200 py-3 text-xs sm:gap-5">
               <div>
-                <span className="text-neutral-400">
+                <span className="text-neutral-500">
                   SKU
                 </span>
 
@@ -522,7 +522,7 @@ export function ProductDetail({
                           }
                         </p>
 
-                        <span className="text-xs text-neutral-400">
+                        <span className="text-xs text-neutral-500">
                           {
                             selections[
                               group
@@ -556,7 +556,8 @@ export function ProductDetail({
                                     value
                                   )
                                 }
-                                className={`relative min-w-14 rounded-lg border px-3 py-2 text-xs font-medium transition ${
+                                aria-pressed={selected}
+                                className={`relative min-h-11 min-w-14 rounded-lg border px-3 py-2 text-xs font-medium transition ${
                                   selected
                                     ? "border-[#17352c] bg-[#17352c] text-white"
                                     : "border-neutral-300 bg-white hover:border-neutral-500"
@@ -585,10 +586,11 @@ export function ProductDetail({
               </div>
             )}
 
+            <p className="mt-5 text-sm leading-6 text-muted">Order at least {minimumQuantity} units in increments of {caseQuantity}. Quantities are checked against available stock.</p>
             {/* MOQ + CASE + QUANTITY */}
             <div className="mt-5 grid grid-cols-2 overflow-hidden rounded-xl border border-neutral-200 sm:grid-cols-[1fr_1fr_auto]">
               <div className="border-r border-neutral-200 px-3 py-3 sm:px-4">
-                <p className="whitespace-nowrap text-[10px] font-medium uppercase tracking-wide text-neutral-400">
+                <p className="whitespace-nowrap text-xs font-medium uppercase tracking-wide text-neutral-500">
                   Minimum order
                 </p>
 
@@ -601,7 +603,7 @@ export function ProductDetail({
               </div>
 
               <div className="px-3 py-3 sm:border-r sm:border-neutral-200 sm:px-4">
-                <p className="whitespace-nowrap text-[10px] font-medium uppercase tracking-wide text-neutral-400">
+                <p className="whitespace-nowrap text-xs font-medium uppercase tracking-wide text-neutral-500">
                   Case quantity
                 </p>
 
@@ -613,7 +615,7 @@ export function ProductDetail({
               </div>
 
               <div className="col-span-2 border-t border-neutral-200 px-3 py-3 sm:col-span-1 sm:border-t-0">
-                <p className="text-center text-[10px] font-medium uppercase tracking-wide text-neutral-400">
+                <p className="text-center text-xs font-medium uppercase tracking-wide text-neutral-500">
                   Quantity
                 </p>
 
@@ -713,6 +715,8 @@ export function ProductDetail({
               />
             </div>
 
+            {hasInvalidVariant && <p role="status" className="mt-2 text-sm text-red-700">This combination is unavailable. Choose another option.</p>}
+            {activeStock <= 0 && !hasInvalidVariant && <p role="status" className="mt-2 text-sm text-muted">This product is currently out of stock.</p>}
             {quantityExceedsStock && (
               <p className="mt-2 text-xs font-medium text-red-600">
                 Selected quantity exceeds
@@ -737,7 +741,7 @@ export function ProductDetail({
               }
             </p>
           ) : (
-            <p className="mt-3 text-sm text-neutral-400">
+            <p className="mt-3 text-sm text-neutral-500">
               No description available.
             </p>
           )}

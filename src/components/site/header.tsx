@@ -6,7 +6,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   ChevronDown,
-  ChevronLeft,
   ChevronRight,
   Heart,
   LogOut,
@@ -14,6 +13,7 @@ import {
   Search,
   ShoppingBag,
   UserRound,
+  X,
 } from "lucide-react";
 import {
   useCallback,
@@ -22,7 +22,7 @@ import {
   useState,
 } from "react";
 
-import { StoreNavigation, type StoreMenu } from "./store-navigation";
+import { StoreNavigation } from "./store-navigation";
 
 import { siteConfig } from "@/config/site";
 import { authClient } from "@/lib/auth-client";
@@ -44,12 +44,11 @@ function formatMoney(cents: number) {
 
 export function Header() {
   const pathname = usePathname();
-  const [mobileMenu, setMobileMenu] = useState<{ pathname: string; section: StoreMenu | null }>({ pathname, section: null });
-  if (mobileMenu.pathname !== pathname) setMobileMenu({ pathname, section: null });
-  const activeMenu = mobileMenu.pathname === pathname ? mobileMenu.section : null;
-  const handleMobileMenuChange = useCallback((section: StoreMenu | null) => {
-    setMobileMenu({ pathname, section });
-  }, [pathname]);
+  const [navigation, setNavigation] = useState({ pathname, open: false });
+  const navigationOpen = navigation.pathname === pathname && navigation.open;
+  const [mobileSearch, setMobileSearch] = useState({ pathname, open: false });
+  if (mobileSearch.pathname !== pathname) setMobileSearch({ pathname, open: false });
+  const mobileSearchOpen = mobileSearch.pathname === pathname && mobileSearch.open;
   const {
     items,
     totalItems,
@@ -74,22 +73,29 @@ export function Header() {
     setCartOpen,
   ] = useState(false);
 
-const [
+  if (navigation.pathname !== pathname) {
+    setNavigation({ pathname, open: false });
+    setAccountOpen(false);
+    setCartOpen(false);
+  }
+
+  const handleNavigationChange = useCallback((open: boolean) => {
+    setNavigation({ pathname, open });
+    if (open) {
+      setAccountOpen(false);
+      setCartOpen(false);
+    }
+  }, [pathname]);
+
+  const [
     categories,
     setCategories,
   ] = useState<HeaderCategory[]>(
     []
   );
 
-  const [
-    canScrollLeft,
-    setCanScrollLeft,
-  ] = useState(false);
-
-  const [
-    canScrollRight,
-    setCanScrollRight,
-  ] = useState(false);
+  const [categoryStatus, setCategoryStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [categoryAttempt, setCategoryAttempt] = useState(0);
 
   const accountRef =
     useRef<HTMLDivElement | null>(
@@ -101,10 +107,39 @@ const [
       null
     );
 
-  const categoryNavRef =
-    useRef<HTMLDivElement | null>(
-      null
-    );
+  const mobileSearchTriggerRef = useRef<HTMLButtonElement>(null);
+  const mobileSearchInputRef = useRef<HTMLInputElement>(null);
+  const desktopSearchInputRef = useRef<HTMLInputElement>(null);
+  const accountInitial = Array.from(session?.user?.name?.trim() || session?.user?.email?.trim() || "Account")[0].toLocaleUpperCase();
+
+  useEffect(() => {
+    if (!mobileSearchOpen) return;
+    const focusFrame = requestAnimationFrame(() => mobileSearchInputRef.current?.focus({ preventScroll: true }));
+    const desktop = window.matchMedia("(min-width: 1024px)");
+    const dismissOnDesktop = () => {
+      if (desktop.matches) {
+        setMobileSearch({ pathname, open: false });
+        desktopSearchInputRef.current?.focus();
+      }
+    };
+    desktop.addEventListener("change", dismissOnDesktop);
+    return () => {
+      cancelAnimationFrame(focusFrame);
+      desktop.removeEventListener("change", dismissOnDesktop);
+    };
+  }, [mobileSearchOpen, pathname]);
+
+  function openMobileSearch() {
+    setAccountOpen(false);
+    setCartOpen(false);
+    setNavigation({ pathname, open: false });
+    setMobileSearch({ pathname, open: true });
+  }
+
+  function closeMobileSearch() {
+    setMobileSearch({ pathname, open: false });
+    requestAnimationFrame(() => mobileSearchTriggerRef.current?.focus());
+  }
 
   /*
    * Show a maximum of three cart lines.
@@ -128,7 +163,7 @@ const [
    */
   useEffect(() => {
     function handleClickOutside(
-      event: MouseEvent
+      event: PointerEvent
     ) {
       const target =
         event.target as Node;
@@ -153,13 +188,13 @@ const [
     }
 
     document.addEventListener(
-      "mousedown",
+      "pointerdown",
       handleClickOutside
     );
 
     return () => {
       document.removeEventListener(
-        "mousedown",
+        "pointerdown",
         handleClickOutside
       );
     };
@@ -179,19 +214,17 @@ const [
             "/api/store/categories"
           );
 
-        if (!response.ok) {
-          return;
-        }
+        if (!response.ok) throw new Error("Could not load categories");
 
         const data =
           (await response.json()) as HeaderCategory[];
 
         if (!cancelled) {
           setCategories(data);
+          setCategoryStatus("ready");
         }
       } catch {
-        // Keep the header usable
-        // if category loading fails.
+        if (!cancelled) setCategoryStatus("error");
       }
     }
 
@@ -200,80 +233,7 @@ const [
     return () => {
       cancelled = true;
     };
-  }, []);
-
-  /*
-   * Category navigation arrows.
-   */
-  useEffect(() => {
-    const element =
-      categoryNavRef.current;
-
-    if (!element) {
-      return;
-    }
-
-    function updateButtons() {
-      const el =
-        categoryNavRef.current;
-
-      if (!el) {
-        return;
-      }
-
-      setCanScrollLeft(
-        el.scrollLeft > 4
-      );
-
-      setCanScrollRight(
-        el.scrollLeft +
-          el.clientWidth <
-          el.scrollWidth - 4
-      );
-    }
-
-    updateButtons();
-
-    requestAnimationFrame(
-      updateButtons
-    );
-
-    element.addEventListener(
-      "scroll",
-      updateButtons
-    );
-
-    window.addEventListener(
-      "resize",
-      updateButtons
-    );
-
-    return () => {
-      element.removeEventListener(
-        "scroll",
-        updateButtons
-      );
-
-      window.removeEventListener(
-        "resize",
-        updateButtons
-      );
-    };
-  }, [categories]);
-
-  function scrollCategories(
-    direction: "left" | "right"
-  ) {
-    categoryNavRef.current?.scrollBy(
-      {
-        left:
-          direction === "right"
-            ? 420
-            : -420,
-        behavior: "smooth",
-      }
-    );
-  }
+  }, [categoryAttempt]);
 
   /*
    * Remember where the buyer was
@@ -319,12 +279,6 @@ const [
   function handleAccountToggle() {
     setCartOpen(false);
 
-    if (window.matchMedia("(width < 1024px)").matches) {
-      setAccountOpen(false);
-      handleMobileMenuChange("more");
-      return;
-    }
-
     setAccountOpen(
       (current) => !current
     );
@@ -357,23 +311,26 @@ const [
 
       <header className="border-b border-neutral-200 bg-white">
         {/* MAIN HEADER */}
-        <div className="mx-auto flex h-[76px] max-w-[1500px] items-center gap-2 px-3 sm:gap-5 sm:px-5 lg:gap-7 lg:px-8">
-          {/* MOBILE MENU */}
-          <StoreNavigation menu={activeMenu} onMenuChange={handleMobileMenuChange} categories={categories} totalItems={totalItems} totalSaved={totalSaved} signedIn={Boolean(session?.user)} isAdmin={session?.user?.role === "admin"} onSignIn={handleBuyerSignIn} onSignOut={handleSignOut} />
+        <div className="relative mx-auto h-[76px] max-w-[1500px]">
+        <div className={`store-header-content flex h-full items-center gap-1 px-2 sm:gap-5 sm:px-5 lg:gap-7 lg:px-8 ${mobileSearchOpen ? "invisible opacity-0" : "visible opacity-100"}`} inert={mobileSearchOpen} aria-hidden={mobileSearchOpen || undefined}>
+          {/* NAVIGATION MENU */}
+          <StoreNavigation open={navigationOpen} onOpenChange={handleNavigationChange} categories={categories} categoryStatus={categoryStatus} onRetryCategories={() => { setCategoryStatus("loading"); setCategoryAttempt((attempt) => attempt + 1); }} />
 
           {/* LOGO */}
           <Link
             href="/"
-            className="min-w-0 text-[24px] sm:shrink-0 sm:text-[27px] font-semibold tracking-[-0.045em] text-neutral-950"
+            className="min-w-0 truncate text-[22px] max-[360px]:text-[14px] sm:shrink-0 sm:text-[27px] font-semibold tracking-[-0.045em] text-neutral-950"
           >
             {siteConfig.name}
           </Link>
 
           {/* SEARCH */}
           <form
+            role="search"
+            aria-label="Search products"
             action="/products"
             method="GET"
-            className="hidden max-w-2xl flex-1 items-center rounded-full border border-neutral-300 bg-neutral-50 px-4 transition focus-within:border-neutral-500 lg:flex"
+            className="store-header-search-field hidden max-w-2xl flex-1 items-center rounded-full border border-neutral-300 bg-neutral-50 px-4 transition focus-within:border-brand focus-within:ring-2 focus-within:ring-brand/15 lg:flex"
           >
             <button
               type="submit"
@@ -384,23 +341,19 @@ const [
             </button>
 
             <input
+              ref={desktopSearchInputRef}
               type="search"
+              aria-label="Search products, brands and categories"
               name="q"
               placeholder="Search products, brands and categories"
-              className="h-11 w-full bg-transparent px-3 text-sm outline-none placeholder:text-neutral-500"
+              className="h-11 min-w-0 flex-1 bg-transparent px-3 text-sm outline-none placeholder:text-neutral-500"
             />
           </form>
 
           {/* RIGHT NAV */}
-          <nav className="ml-auto flex shrink-0 items-center gap-1 sm:gap-3 md:gap-4">
-            <button
-              type="button"
-              className="hidden text-sm font-medium text-neutral-700 transition hover:text-neutral-950 md:block"
-            >
-              Help
-            </button>
-
-            {/* SIGN IN / REGISTER */}
+          <nav aria-label="Header actions" className="ml-auto flex shrink-0 items-center gap-0 sm:gap-3 md:gap-4">
+            <button type="button" ref={mobileSearchTriggerRef} onClick={openMobileSearch} aria-label="Open search" aria-expanded={mobileSearchOpen} aria-controls="store-mobile-search" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition hover:bg-neutral-100 active:bg-neutral-200 lg:hidden"><Search size={20} /></button>
+{/* SIGN IN / REGISTER */}
             {!isPending &&
               !session?.user && (
                 <>
@@ -431,7 +384,7 @@ const [
                   ? `${totalSaved} saved products`
                   : "Saved products"
               }
-              className="relative hidden h-9 w-9 items-center justify-center rounded-full transition hover:bg-neutral-100 sm:flex"
+              className="relative flex h-11 w-11 items-center justify-center rounded-full transition hover:bg-neutral-100 active:bg-neutral-200 sm:h-9 sm:w-9"
             >
               <Heart
                 size={20}
@@ -447,149 +400,21 @@ const [
               )}
             </Link>
 
-            {/* ACCOUNT */}
-            <div
-              ref={accountRef}
-              className="relative"
-            >
-              {session?.user ? (
-                <>
-                  <button
-                    type="button"
-                    onClick={
-                      handleAccountToggle
-                    }
-                    aria-label="Account menu"
-                    aria-expanded={
-                      accountOpen || activeMenu === "more"
-                    }
-                    className="flex h-11 items-center gap-1.5 rounded-full px-2 transition hover:bg-neutral-100 lg:h-9"
-                  >
-                    <UserRound
-                      size={20}
-                    />
-
-                    <ChevronDown
-                      size={13}
-                      className={`hidden transition-transform md:block ${
-                        accountOpen || activeMenu === "more"
-                          ? "rotate-180"
-                          : ""
-                      }`}
-                    />
-                  </button>
-
-                  {accountOpen && (
-                    <div className="absolute right-0 top-[46px] z-[100] hidden w-[270px] overflow-hidden rounded-[22px] border border-white/80 bg-white/70 p-2 shadow-[0_28px_80px_rgba(0,0,0,0.18)] backdrop-blur-2xl lg:block">
-                      {/* USER CARD */}
-                      <div className="rounded-2xl border border-white/80 bg-white/55 px-4 py-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.95)]">
-                        <p className="truncate text-sm font-semibold text-neutral-950">
-                          {
-                            session.user
-                              .name
-                          }
-                        </p>
-
-                        <p className="mt-0.5 truncate text-xs text-neutral-500">
-                          {
-                            session.user
-                              .email
-                          }
-                        </p>
-                      </div>
-
-                      <div className="mt-2 space-y-1">
-                        <GlassAccountLink
-                          href="/account"
-                          onClick={() =>
-                            setAccountOpen(
-                              false
-                            )
-                          }
-                          icon={
-                            <UserRound
-                              size={16}
-                            />
-                          }
-                        >
-                          Account
-                        </GlassAccountLink>
-
-                        <GlassAccountLink
-                          href="/account/orders"
-                          onClick={() =>
-                            setAccountOpen(
-                              false
-                            )
-                          }
-                          icon={
-                            <Package
-                              size={16}
-                            />
-                          }
-                        >
-                          My orders
-                        </GlassAccountLink>
-
-                        {session.user
-                          .role ===
-                          "admin" && (
-                          <GlassAccountLink
-                            href="/admin"
-                            onClick={() =>
-                              setAccountOpen(
-                                false
-                              )
-                            }
-                            icon={
-                              <ShoppingBag
-                                size={16}
-                              />
-                            }
-                          >
-                            Admin dashboard
-                          </GlassAccountLink>
-                        )}
-                      </div>
-
-                      <div className="mt-2 border-t border-white/70 pt-2">
-                        <button
-                          type="button"
-                          onClick={
-                            handleSignOut
-                          }
-                          className="flex w-full items-center gap-3 rounded-xl border border-transparent px-3 py-2.5 text-left text-sm font-medium text-red-600 transition hover:border-red-100 hover:bg-white/75"
-                        >
-                          <LogOut
-                            size={16}
-                          />
-
-                          Sign out
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <Link
-                  href="/login"
-                  onClick={
-                    handleBuyerSignIn
-                  }
-                  aria-label="Sign in"
-                  className="flex h-11 w-11 items-center justify-center rounded-full transition hover:bg-neutral-100 md:hidden"
-                >
-                  <UserRound
-                    size={20}
-                  />
-                </Link>
-              )}
-            </div>
-
             {/* CART */}
             <div
               ref={cartRef}
-              className="relative"
+              className="store-header-cart relative"
+              onBlur={(event) => {
+                if (!event.currentTarget.contains(event.relatedTarget)) setCartOpen(false);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Escape" && cartOpen) {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  setCartOpen(false);
+                  cartRef.current?.querySelector<HTMLButtonElement>("button")?.focus();
+                }
+              }}
             >
               {/* DESKTOP CART BUTTON */}
               <button
@@ -613,7 +438,7 @@ const [
                 />
 
                 {totalItems > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#17352c] px-1 text-[9px] font-semibold leading-none text-white">
+                  <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#17352c] px-1 text-xs font-semibold leading-none text-white">
                     {totalItems > 99
                       ? "99+"
                       : totalItems}
@@ -636,7 +461,7 @@ const [
                 />
 
                 {totalItems > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#17352c] px-1 text-[9px] font-semibold leading-none text-white">
+                  <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#17352c] px-1 text-xs font-semibold leading-none text-white">
                     {totalItems > 99
                       ? "99+"
                       : totalItems}
@@ -646,9 +471,9 @@ const [
 
               {/* MINI CART */}
               {cartOpen && (
-                <div className="absolute right-0 top-[46px] z-[110] hidden w-[380px] overflow-hidden rounded-[22px] border border-white/80 bg-white/70 p-2 shadow-[0_28px_80px_rgba(0,0,0,0.18)] backdrop-blur-2xl md:block">
+                <div className="absolute right-0 top-[46px] z-[110] hidden w-[380px] overflow-hidden rounded-[22px] glass-surface p-2 md:block">
                   {/* CART HEADER */}
-                  <div className="rounded-2xl border border-white/80 bg-white/55 px-4 py-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.95)]">
+                  <div className="rounded-2xl border border-border bg-white px-4 py-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.95)]">
                     <div className="flex items-center justify-between gap-4">
                       <div>
                         <p className="text-sm font-semibold text-neutral-950">
@@ -678,7 +503,7 @@ const [
                   {items.length === 0 ? (
                     /* EMPTY CART */
                     <div className="mt-2 rounded-2xl border border-white/80 bg-white/30 px-5 py-7 text-center">
-                      <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full border border-white/80 bg-white/55 text-neutral-500 shadow-sm">
+                      <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full border border-border bg-white text-neutral-500 shadow-sm">
                         <ShoppingBag
                           size={19}
                         />
@@ -728,7 +553,7 @@ const [
                                     false
                                   )
                                 }
-                                className="h-[64px] w-[64px] shrink-0 overflow-hidden rounded-xl border border-white/80 bg-white/55 shadow-sm"
+                                className="h-[64px] w-[64px] shrink-0 overflow-hidden rounded-xl border border-border bg-white shadow-sm"
                               >
                                 {item.imageUrl ? (
                                   <img
@@ -741,7 +566,7 @@ const [
                                     className="h-full w-full object-cover"
                                   />
                                 ) : (
-                                  <div className="flex h-full w-full items-center justify-center text-neutral-400">
+                                  <div className="flex h-full w-full items-center justify-center text-neutral-500">
                                     <ShoppingBag
                                       size={
                                         19
@@ -817,14 +642,14 @@ const [
 
                       {/* CART FOOTER */}
                       <div className="mt-2 border-t border-white/70 pt-2">
-                        <div className="rounded-2xl border border-white/80 bg-white/55 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.95)]">
+                        <div className="rounded-2xl border border-border bg-white p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.95)]">
                           <div className="flex items-center justify-between gap-4">
                             <div>
                               <p className="text-xs font-medium text-neutral-500">
                                 Subtotal
                               </p>
 
-                              <p className="mt-0.5 text-[11px] text-neutral-400">
+                              <p className="mt-0.5 text-xs text-neutral-500">
                                 Before
                                 shipping
                               </p>
@@ -855,88 +680,166 @@ const [
                 </div>
               )}
             </div>
-          </nav>
-        </div>
 
-        {/* DESKTOP CATEGORY NAV */}
-        <div className="border-t border-neutral-100">
-          <div className="mx-auto hidden h-[48px] max-w-[1500px] items-center gap-2 px-5 lg:flex lg:px-8">
-            {/* PREVIOUS */}
-            <button
-              type="button"
-              onClick={() =>
-                scrollCategories(
-                  "left"
-                )
-              }
-              disabled={
-                !canScrollLeft
-              }
-              aria-label="Previous categories"
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-600 shadow-sm transition hover:bg-neutral-50 disabled:cursor-default disabled:opacity-25"
-            >
-              <ChevronLeft
-                size={16}
-              />
-            </button>
-
-            {/* CATEGORY TRACK */}
+            {/* ACCOUNT */}
             <div
-              ref={
-                categoryNavRef
-              }
-              className="flex min-w-0 flex-1 items-center gap-8 overflow-x-hidden scroll-smooth whitespace-nowrap"
+              ref={accountRef}
+              className="static sm:relative"
+              onBlur={(event) => {
+                if (!event.currentTarget.contains(event.relatedTarget)) setAccountOpen(false);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Escape" && accountOpen) {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  setAccountOpen(false);
+                  accountRef.current?.querySelector<HTMLButtonElement>("button")?.focus();
+                }
+              }}
             >
-              <Link
-                href="/products"
-                className="shrink-0 text-sm font-medium transition hover:text-[#17352c]"
-              >
-                All Products
-              </Link>
-
-              {categories.map(
-                (category) => (
-                  <Link
-                    key={
-                      category.id
+              {session?.user ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={
+                      handleAccountToggle
                     }
-                    href={`/categories/${category.slug}`}
-                    className="shrink-0 text-sm text-neutral-700 transition hover:text-[#17352c]"
+                    aria-label={`Account menu for ${session.user.name || session.user.email}`}
+                    aria-controls="store-account-menu"
+                    aria-expanded={
+                      accountOpen
+                    }
+                    className="flex h-11 w-11 items-center justify-center gap-1.5 rounded-full transition hover:bg-neutral-100 active:bg-neutral-200 sm:w-auto sm:px-2"
                   >
-                    {
-                      category.name
-                    }
-                  </Link>
-                )
-              )}
+                    <span aria-hidden="true" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#17352c] text-sm font-semibold text-white">{accountInitial}</span>
 
-              <Link
-                href="/products?sort=newest"
-                className="shrink-0 text-sm font-semibold text-[#a7422c]"
-              >
-                New Arrivals
-              </Link>
+                    <ChevronDown
+                      size={13}
+                      className={`hidden transition-transform md:block ${
+                        accountOpen
+                          ? "rotate-180"
+                          : ""
+                      }`}
+                    />
+                  </button>
+
+                  {accountOpen && (
+                    <div id="store-account-menu" className="absolute right-3 top-[calc(100%-0.5rem)] z-[100] max-h-[calc(100dvh-8rem)] w-[min(270px,calc(100vw-1.5rem))] overflow-y-auto overscroll-contain rounded-[22px] glass-surface p-2 sm:right-0 sm:top-[46px]">
+                      {/* USER CARD */}
+                      <div className="rounded-2xl border border-border bg-white px-4 py-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.95)]">
+                        <p className="break-words text-sm font-semibold text-neutral-950">
+                          {
+                            session.user
+                              .name
+                          }
+                        </p>
+
+                        <p className="mt-0.5 break-words text-xs text-neutral-500">
+                          {
+                            session.user
+                              .email
+                          }
+                        </p>
+                      </div>
+
+                      <div className="mt-2 space-y-1">
+                        <GlassAccountLink
+                          href="/account"
+                          onClick={() =>
+                            setAccountOpen(
+                              false
+                            )
+                          }
+                          icon={
+                            <UserRound
+                              size={16}
+                            />
+                          }
+                        >
+                          Account
+                        </GlassAccountLink>
+
+                        <GlassAccountLink
+                          href="/account/orders"
+                          onClick={() =>
+                            setAccountOpen(
+                              false
+                            )
+                          }
+                          icon={
+                            <Package
+                              size={16}
+                            />
+                          }
+                        >
+                          My orders
+                        </GlassAccountLink>
+
+                        {session.user
+                          .role ===
+                          "admin" && (
+                          <GlassAccountLink
+                            href="/admin"
+                            onClick={() =>
+                              setAccountOpen(
+                                false
+                              )
+                            }
+                            icon={
+                              <ShoppingBag
+                                size={16}
+                              />
+                            }
+                          >
+                            Admin dashboard
+                          </GlassAccountLink>
+                        )}
+                      </div>
+
+                      <div className="mt-2 border-t border-white/70 pt-2">
+                        <button
+                          type="button"
+                          onClick={
+                            handleSignOut
+                          }
+                          className="flex min-h-11 w-full items-center gap-3 rounded-xl border border-transparent px-3 py-2.5 text-left text-sm font-medium text-red-600 transition hover:border-red-100 hover:bg-white/75 active:bg-white"
+                        >
+                          <LogOut
+                            size={16}
+                          />
+
+                          Sign out
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <Link
+                  href="/login"
+                  onClick={
+                    handleBuyerSignIn
+                  }
+                  aria-label="Sign in"
+                  className="flex h-11 w-11 items-center justify-center rounded-full transition hover:bg-neutral-100 md:hidden"
+                >
+                  <UserRound
+                    size={20}
+                  />
+                </Link>
+              )}
             </div>
 
-            {/* NEXT */}
-            <button
-              type="button"
-              onClick={() =>
-                scrollCategories(
-                  "right"
-                )
-              }
-              disabled={
-                !canScrollRight
-              }
-              aria-label="Next categories"
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-600 shadow-sm transition hover:bg-neutral-50 disabled:cursor-default disabled:opacity-25"
-            >
-              <ChevronRight
-                size={16}
-              />
-            </button>
+          </nav>
+        </div>
+        <form id="store-mobile-search" role="search" action="/products" method="GET" aria-label="Search products" aria-hidden={!mobileSearchOpen} inert={!mobileSearchOpen} onKeyDown={(event) => { if (event.key === "Escape") { event.preventDefault(); closeMobileSearch(); } }} className={`store-header-search absolute inset-0 z-40 flex items-center gap-2 bg-white px-3 sm:px-5 lg:hidden ${mobileSearchOpen ? "visible translate-x-0 scale-100 opacity-100" : "invisible translate-x-3 scale-[0.98] opacity-0"}`}>
+          <div className="store-header-search-field flex min-w-0 flex-1 items-center rounded-full border border-neutral-300 bg-neutral-50 pl-4 focus-within:border-brand focus-within:ring-2 focus-within:ring-brand/15">
+            <Search size={20} aria-hidden="true" className="shrink-0 text-neutral-500" />
+            <input ref={mobileSearchInputRef} type="search" name="q" aria-label="Search products, brands and categories" placeholder="Search products..." className="h-11 min-w-0 flex-1 bg-transparent px-3 text-base outline-none" />
+            <button type="submit" aria-label="Submit search" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-brand transition hover:bg-neutral-200 active:bg-neutral-300"><ChevronRight size={20} /></button>
           </div>
+          <button type="button" onClick={closeMobileSearch} aria-label="Close search" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition hover:bg-neutral-100 active:bg-neutral-200"><X size={21} /></button>
+        </form>
         </div>
 
       </header>
@@ -959,7 +862,7 @@ function GlassAccountLink({
     <Link
       href={href}
       onClick={onClick}
-      className="flex items-center gap-3 rounded-xl border border-transparent bg-white/30 px-3 py-2.5 text-sm font-medium text-neutral-700 transition hover:border-white/80 hover:bg-white/75 hover:text-neutral-950 hover:shadow-sm"
+      className="flex min-h-11 items-center gap-3 rounded-xl border border-transparent bg-white/30 px-3 py-2.5 text-sm font-medium text-neutral-700 transition hover:border-white/80 hover:bg-white/75 hover:text-neutral-950 hover:shadow-sm active:bg-white"
     >
       <span className="text-neutral-500">
         {icon}

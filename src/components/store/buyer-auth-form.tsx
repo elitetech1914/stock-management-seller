@@ -246,7 +246,7 @@ export default function BuyerAuthForm({
             <div className="relative">
               <UserRound
                 size={18}
-                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400"
+                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500"
               />
 
               <input
@@ -261,7 +261,7 @@ export default function BuyerAuthForm({
                 autoComplete="name"
                 required
                 placeholder="Your name"
-                className="h-12 w-full rounded-xl border border-neutral-300 bg-white pl-11 pr-4 text-sm text-neutral-950 outline-none transition placeholder:text-neutral-400 focus:border-[#17352c] focus:ring-2 focus:ring-[#17352c]/10"
+                className="h-12 w-full rounded-xl border border-neutral-300 bg-white pl-11 pr-4 text-sm text-neutral-950 outline-none transition placeholder:text-neutral-500 focus:border-[#17352c] focus:ring-2 focus:ring-[#17352c]/10"
               />
             </div>
           </div>
@@ -278,7 +278,7 @@ export default function BuyerAuthForm({
           <div className="relative">
             <Mail
               size={18}
-              className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400"
+              className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500"
             />
 
             <input
@@ -295,7 +295,7 @@ export default function BuyerAuthForm({
               spellCheck={false}
               required
               placeholder="you@example.com"
-              className="h-12 w-full rounded-xl border border-neutral-300 bg-white pl-11 pr-4 text-sm text-neutral-950 outline-none transition placeholder:text-neutral-400 focus:border-[#17352c] focus:ring-2 focus:ring-[#17352c]/10"
+              className="h-12 w-full rounded-xl border border-neutral-300 bg-white pl-11 pr-4 text-sm text-neutral-950 outline-none transition placeholder:text-neutral-500 focus:border-[#17352c] focus:ring-2 focus:ring-[#17352c]/10"
             />
           </div>
         </div>
@@ -311,7 +311,7 @@ export default function BuyerAuthForm({
           <div className="relative">
             <LockKeyhole
               size={18}
-              className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400"
+              className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500"
             />
 
             <input
@@ -343,7 +343,7 @@ export default function BuyerAuthForm({
                   ? "At least 8 characters"
                   : "Enter your password"
               }
-              className="h-12 w-full rounded-xl border border-neutral-300 bg-white pl-11 pr-12 text-sm text-neutral-950 outline-none transition placeholder:text-neutral-400 focus:border-[#17352c] focus:ring-2 focus:ring-[#17352c]/10"
+              className="h-12 w-full rounded-xl border border-neutral-300 bg-white pl-11 pr-12 text-sm text-neutral-950 outline-none transition placeholder:text-neutral-500 focus:border-[#17352c] focus:ring-2 focus:ring-[#17352c]/10"
             />
 
             <button
@@ -359,7 +359,7 @@ export default function BuyerAuthForm({
                   ? "Hide password"
                   : "Show password"
               }
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-400 transition hover:text-neutral-700"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-500 transition hover:text-neutral-700"
             >
               {showPassword ? (
                 <EyeOff

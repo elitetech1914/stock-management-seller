@@ -52,6 +52,7 @@ function sendFile(batchId: string, file: File, progress: (percent: number, proce
 
 export function BulkImages() {
   const [batches, setBatches] = useState<Batch[]>([]);
+  const [batchAttempt, setBatchAttempt] = useState(0);
   const [batchId, setBatchId] = useState("");
   const [batchCursor, setBatchCursor] = useState<string | null>(null);
   const [batchName, setBatchName] = useState("");
@@ -71,6 +72,7 @@ export function BulkImages() {
   useEffect(() => {
     const controller = new AbortController();
     jsonRequest("/api/admin/media/batches", { signal: controller.signal }).then((data) => {
+      if (controller.signal.aborted) return;
       setBatches(data.batches);
       setBatchCursor(data.nextCursor);
       if (data.batches.length) setBatchId(data.batches[0].id);
@@ -79,7 +81,7 @@ export function BulkImages() {
       if (!controller.signal.aborted) { setError(failure.message); setLoading(false); }
     });
     return () => controller.abort();
-  }, []);
+  }, [batchAttempt]);
 
   useEffect(() => {
     if (!batchId) return;
@@ -185,14 +187,14 @@ export function BulkImages() {
   const failed = uploads.filter((item) => item.state === "error").length;
 
   return (
-    <div className="mt-10 space-y-6">
-      {error && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">{error}</div>}
+    <div className="mt-6 space-y-6">
+      {error && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700"><p>{error}</p>{!batchId && <button type="button" disabled={loading || creating} onClick={() => { setError(""); setLoading(true); setBatchAttempt((attempt) => attempt + 1); }} className="mt-2 min-h-11 font-semibold underline underline-offset-4 disabled:opacity-50">Reload batches</button>}</div>}
       {notice && <p role="status" className="rounded-xl bg-neutral-100 px-5 py-4 text-sm text-neutral-700">{notice}</p>}
 
       <section className="rounded-2xl border border-neutral-200 bg-white p-4 sm:p-6">
         <h2 className="font-semibold">Import batch</h2>
-        <p className="mt-1 text-sm leading-6 text-neutral-500">Use a separate batch for each supplier delivery, even when filenames repeat.</p>
-        <div className="mt-5 grid gap-5 xl:grid-cols-2">
+        <p className="mt-1 text-sm leading-6 text-neutral-500">A batch groups images from one supplier or delivery. Give it a name you can recognize later, such as a supplier and month. Filenames stay unchanged.</p>
+        <div className="mt-5 grid gap-6 lg:grid-cols-2">
           <div>
             <label id="media-batch-label" htmlFor="media-batch" className="mb-2 block text-sm font-medium">Select batch</label>
             <BatchSelect
@@ -210,10 +212,11 @@ export function BulkImages() {
           </div>
           <form onSubmit={createBatch}>
             <label htmlFor="media-batch-name" className="mb-2 block text-sm font-medium">New batch name</label>
-            <div className="flex gap-2">
-              <input id="media-batch-name" value={batchName} onChange={(event) => setBatchName(event.target.value)} maxLength={150} required placeholder="Supplier · October delivery" disabled={busy || creating} className={`${fieldClass} min-w-0 flex-1`} />
+            <div className="flex flex-wrap gap-2">
+              <input id="media-batch-name" value={batchName} onChange={(event) => setBatchName(event.target.value)} maxLength={150} required aria-describedby="batch-name-help" placeholder="Supplier · October delivery" disabled={busy || creating} className={`${fieldClass} min-w-0 flex-1`} />
               <button type="submit" disabled={busy || creating || !batchName.trim()} className={buttonClass}>{creating ? <Loader2 size={16} className="animate-spin" /> : "Create"}</button>
             </div>
+            <p id="batch-name-help" className="mt-2 text-xs leading-5 text-muted">This label helps you find a delivery in the batch library.</p>
           </form>
         </div>
       </section>
@@ -226,17 +229,18 @@ export function BulkImages() {
           className={`mt-5 rounded-xl border-2 border-dashed px-6 py-10 text-center transition ${dragging ? "border-[#17352c] bg-emerald-50" : "border-neutral-200 bg-neutral-50"}`}>
           <UploadCloud size={32} className="mx-auto text-[#17352c]" />
           <p className="mt-3 text-sm font-medium">{batchId ? "Drop your supplier images here" : "Create or select an import batch first"}</p>
-          <p className="mt-1 text-xs text-neutral-500">Images upload two at a time and keep their exact original filenames.</p>
+          <p className="mt-1 text-xs text-neutral-500">Choose up to 500 images. Original filenames are kept for reference.</p>
           <input ref={fileInput} type="file" multiple accept="image/jpeg,image/png,image/webp" className="sr-only" aria-label="Select product images" disabled={!batchId || busy || loading || creating}
             onChange={(event) => { addFiles(Array.from(event.target.files ?? [])); event.target.value = ""; }} />
           <button type="button" onClick={() => fileInput.current?.click()} disabled={!batchId || busy || loading || creating} className={`${buttonClass} mt-5`}><ImagePlus size={16} />Choose images</button>
         </div>
 
+        {busy && <p role="status" className="mt-3 text-sm text-muted">Keep this page open until uploads finish. Batch selection is available again after uploading.</p>}
         {!!uploads.length && <>
           <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
             <p role="status" className="text-sm text-neutral-500">{succeeded} uploaded · {queued} queued · {failed} failed</p>
             <div className="flex flex-wrap gap-3">
-              <button type="button" disabled={busy} onClick={() => setUploads([])} className="text-sm font-medium text-neutral-600 disabled:opacity-50">Clear list</button>
+              <button type="button" disabled={busy} onClick={() => setUploads([])} className="min-h-11 rounded-lg px-3 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50">Clear list</button>
               <button type="button" onClick={uploadFiles} disabled={busy || !queued || loading || creating} className={buttonClass}>
                 {busy ? <Loader2 size={16} className="animate-spin" /> : <UploadCloud size={16} />}{busy ? "Uploading…" : `Upload ${queued} images`}
               </button>
@@ -244,7 +248,7 @@ export function BulkImages() {
           </div>
           <ul className="mt-5 max-h-[420px] divide-y divide-neutral-100 overflow-auto rounded-xl border border-neutral-200">
             {uploads.map((item) => <li key={item.id} className="flex items-center gap-4 p-4">
-              {item.state === "success" ? <CheckCircle2 size={18} className="shrink-0 text-emerald-600" /> : <ImagePlus size={18} className="shrink-0 text-neutral-400" />}
+              {item.state === "success" ? <CheckCircle2 size={18} className="shrink-0 text-emerald-600" /> : <ImagePlus size={18} className="shrink-0 text-neutral-500" />}
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium" title={item.file.name}>{item.file.name}</p>
                 <p className={`mt-1 text-xs ${item.state === "error" ? "text-red-600" : "text-neutral-500"}`}>
@@ -252,8 +256,8 @@ export function BulkImages() {
                 </p>
                 {(item.state === "uploading" || item.state === "processing") && <progress value={item.progress} max={100} aria-label={`Upload progress for ${item.file.name}`} className="mt-2 h-1.5 w-full accent-[#17352c]" />}
               </div>
-              {item.state === "error" && <button type="button" disabled={busy} onClick={() => updateUpload(item.id, { state: "queued", error: undefined, progress: 0 })} className="text-xs font-medium text-[#17352c] disabled:opacity-50">Retry</button>}
-              {!busy && <button type="button" aria-label={`Remove ${item.file.name} from upload list`} onClick={() => setUploads((previous) => previous.filter((entry) => entry.id !== item.id))}><X size={16} className="text-neutral-400" /></button>}
+              {item.state === "error" && <button type="button" disabled={busy} onClick={() => updateUpload(item.id, { state: "queued", error: undefined, progress: 0 })} className="min-h-11 rounded-lg px-3 text-xs font-medium text-brand disabled:opacity-50">Retry</button>}
+              {!busy && <button type="button" aria-label={`Remove ${item.file.name} from upload list`} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg hover:bg-red-50" onClick={() => setUploads((previous) => previous.filter((entry) => entry.id !== item.id))}><X size={16} className="text-neutral-500" /></button>}
             </li>)}
           </ul>
         </>}
@@ -261,19 +265,19 @@ export function BulkImages() {
 
       <section className="rounded-2xl border border-neutral-200 bg-white p-4 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <div><h2 className="font-semibold">Batch library</h2><p className="mt-1 text-sm text-neutral-500">Uploaded catalog images have public read-only URLs. Copy a URL into a product’s Image URLs field to use it now.</p></div>
+          <div><h2 className="font-semibold">Batch library</h2><p className="mt-1 text-sm text-neutral-500">Copy an image URL into a product’s Image URLs field to use it now.</p></div>
           <button type="button" disabled={!batchId || busy || loading} onClick={() => loadAssets()} className="text-sm font-medium text-[#17352c] disabled:opacity-50">Refresh</button>
         </div>
-        <p className="mt-3 text-xs leading-5 text-neutral-500">Automatic CSV filename matching will be added in the next milestone. Uploading here does not change existing products.</p>
+        <p className="mt-3 text-xs leading-5 text-neutral-500">Uploading images does not assign them to products. Add the copied URLs when creating or editing a product.</p>
         {loading ? <p role="status" className="mt-8 flex items-center gap-2 text-sm text-neutral-500"><Loader2 size={16} className="animate-spin" />Loading library…</p>
-          : !assets.length ? <p className="py-12 text-center text-sm text-neutral-400">{batchId ? "No images uploaded in this batch yet." : "Select a batch to view its images."}</p>
+          : !assets.length ? <p className="py-12 text-center text-sm text-neutral-500">{batchId ? "No images uploaded in this batch yet." : "Select a batch to view its images."}</p>
           : <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
             {assets.map((asset) => <article key={asset.id} className="overflow-hidden rounded-xl border border-neutral-200">
               <div className="aspect-square bg-neutral-50"><img src={asset.url} alt={asset.originalFilename} loading="lazy" className="h-full w-full object-contain p-3" /></div>
               <div className="p-3">
                 <p className="truncate text-xs font-medium" title={asset.originalFilename}>{asset.originalFilename}</p>
-                <p className="mt-1 text-xs text-neutral-400">{asset.width} × {asset.height} · {Math.ceil(asset.sizeBytes / 1024)} KiB</p>
-                <button type="button" className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-[#17352c]" onClick={async () => {
+                <p className="mt-1 text-xs text-neutral-500">{asset.width} × {asset.height} · {Math.ceil(asset.sizeBytes / 1024)} KiB</p>
+                <button type="button" className="mt-3 inline-flex min-h-11 items-center gap-1.5 text-xs font-medium text-[#17352c]" onClick={async () => {
                   try { await navigator.clipboard.writeText(asset.url); setNotice(`Copied image URL for ${asset.originalFilename}.`); }
                   catch { setNotice(`Copy this image URL: ${asset.url}`); }
                 }}><Copy size={13} />Copy image URL</button>
