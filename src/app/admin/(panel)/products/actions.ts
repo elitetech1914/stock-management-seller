@@ -12,6 +12,8 @@ import {
 } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { slugify } from "@/lib/slugify";
+import { AdminProductInputError, parseBulkProductRequest, type BulkProductState } from "@/lib/admin-product-filters";
+import { applyBulkProductUpdate } from "@/lib/admin-products";
 
 async function requireAdmin() {
   const session = await auth.api.getSession({
@@ -345,4 +347,21 @@ export async function deleteProduct(
   revalidatePath("/admin/products");
   revalidatePath("/admin");
   revalidatePath("/");
+}
+
+export async function bulkUpdateProducts(previous: BulkProductState, formData: FormData): Promise<BulkProductState> {
+  void previous;
+  try {
+    await requireAdmin();
+    const request = parseBulkProductRequest(formData);
+    const updated = await applyBulkProductUpdate(db, request);
+    for (const path of ["/admin/products", "/admin", "/admin/inventory", "/admin/categories", "/products", "/"]) revalidatePath(path);
+    revalidatePath("/products/[slug]", "page");
+    revalidatePath("/categories/[slug]", "page");
+    revalidatePath("/admin/products/[id]/edit", "page");
+    const verb = request.operation === "archive" ? "archived" : request.operation === "activate" ? "reactivated" : "updated with the selected category";
+    return { success: true, message: `${updated} product${updated === 1 ? "" : "s"} ${verb}.` };
+  } catch (error) {
+    return { success: false, message: error instanceof AdminProductInputError ? error.message : "Could not update products. Please check your access and try again." };
+  }
 }

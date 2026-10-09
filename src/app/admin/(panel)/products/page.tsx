@@ -1,266 +1,63 @@
 import Link from "next/link";
-import { desc, eq } from "drizzle-orm";
-import {
-  Archive,
-  Package,
-  Pencil,
-  Plus,
-} from "lucide-react";
-
+import { redirect } from "next/navigation";
+import { ChevronLeft, ChevronRight, Package, Plus } from "lucide-react";
 import { db } from "@/db";
+import { ProductFilters } from "@/components/admin/product-filters";
+import { ProductsTable } from "@/components/admin/products-table";
+import { getAdminProducts } from "@/lib/admin-products";
+import { ADMIN_PRODUCTS_PAGE_SIZE, adminProductsHref, parseAdminProductFilters, type AdminProductFilters, type AdminProductSearchParams } from "@/lib/admin-product-filters";
 
-import {
-  categories,
-  products,
-} from "@/db/schema";
-
-import { archiveProduct } from "./actions";
-
-import { DeleteProductButton } from "@/components/admin/delete-product-button";
-
-function formatMoney(cents: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(cents / 100);
-}
-
-export default async function ProductsPage() {
-  const productList = await db
-    .select({
-      id: products.id,
-
-      title: products.title,
-
-      sku: products.sku,
-
-      brand: products.brand,
-
-      wholesalePriceCents:
-        products.wholesalePriceCents,
-
-      retailPriceCents:
-        products.retailPriceCents,
-
-      stockQuantity:
-        products.stockQuantity,
-
-      isActive:
-        products.isActive,
-
-      categoryName:
-        categories.name,
-
-      createdAt:
-        products.createdAt,
-    })
-    .from(products)
-    .leftJoin(
-      categories,
-      eq(
-        products.categoryId,
-        categories.id
-      )
-    )
-    .orderBy(
-      desc(products.createdAt)
-    );
-
+export default async function ProductsPage({ searchParams }: { searchParams: Promise<AdminProductSearchParams> }) {
+  const params = await searchParams;
+  const { filters, total, totalPages, productList, categoryList } = await getAdminProducts(db, params);
+  if (parseAdminProductFilters(params).page !== filters.page) redirect(adminProductsHref(filters));
+  const hasFilters = Boolean(filters.q || filters.category || filters.status !== "all" || filters.stock !== "all");
+  const filtersKey = adminProductsHref(filters);
   return (
     <div className="p-4 sm:p-6 lg:p-8 2xl:p-10">
-      {/* PAGE HEADER */}
       <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm font-medium text-neutral-500">
-            Catalog
-          </p>
-
-          <h1 className="mt-1 text-3xl font-semibold sm:text-4xl tracking-[-0.05em]">
-            Products
-          </h1>
-
-          <p className="mt-2 text-sm text-neutral-500">
-            Manage products, pricing and inventory.
-          </p>
+          <p className="text-sm font-medium text-muted">Catalog</p>
+          <h1 className="mt-1 text-3xl font-semibold tracking-[-0.05em] sm:text-4xl">Products</h1>
+          <p className="mt-2 text-sm text-muted">Manage products, pricing and inventory.</p>
         </div>
-
-        <Link
-          href="/admin/products/new"
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#17352c] px-5 text-sm font-semibold text-white transition hover:bg-[#24483d]"
-        >
-          <Plus size={17} />
-
-          Add product
-        </Link>
+        <div className="flex flex-wrap gap-3">
+          <Link href="/admin/import" className="ui-button ui-button-secondary">Import CSV</Link>
+          <Link href="/admin/products/new" className="ui-button"><Plus size={17} />Add product</Link>
+        </div>
       </div>
-
-      {/* PRODUCTS TABLE */}
-      <section className="mt-10 overflow-hidden rounded-2xl border border-neutral-200 bg-white">
-        {productList.length === 0 ? (
-          /* EMPTY STATE */
-          <div className="flex min-h-[350px] flex-col items-center justify-center px-6 text-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#eef2ef] text-[#17352c]">
-              <Package size={24} />
-            </div>
-
-            <h2 className="mt-5 text-lg font-semibold">
-              No products yet
-            </h2>
-
-            <p className="mt-2 max-w-sm text-sm leading-6 text-neutral-500">
-              Add a product manually or import products
-              using CSV.
-            </p>
-
-            <Link
-              href="/admin/products/new"
-              className="mt-5 inline-flex h-10 items-center gap-2 rounded-xl bg-[#17352c] px-4 text-sm font-semibold text-white"
-            >
-              <Plus size={16} />
-
-              Add product
-            </Link>
-          </div>
-        ) : (
-          /* TABLE */
-          <>
-          <div className="grid gap-3 bg-background p-3 lg:hidden">
-            {productList.map((product) => <article key={product.id} className="ui-panel p-4">
-              <div className="flex items-start justify-between gap-3"><Link href={"/admin/products/" + product.id + "/edit"} className="min-w-0 break-words text-base font-semibold text-brand">{product.title}</Link><span className={"shrink-0 rounded-full px-2 py-1 text-xs font-medium " + (product.isActive ? "bg-emerald-50 text-emerald-700" : "bg-neutral-100 text-neutral-700")}>{product.isActive ? "Active" : "Archived"}</span></div>
-              <p className="mt-2 break-words text-xs text-muted">SKU: {product.sku}</p>{product.brand && <p className="mt-1 break-words text-xs text-muted">{product.brand}</p>}
-              <p className="mt-3 text-sm text-muted">{product.categoryName ?? "No category"}</p>
-              <dl className="mt-4 grid grid-cols-2 gap-4 border-y border-border py-3 text-sm"><div><dt className="text-xs text-muted">Wholesale</dt><dd className="mt-1 font-semibold tabular-nums">{formatMoney(product.wholesalePriceCents)}</dd></div><div><dt className="text-xs text-muted">MSRP</dt><dd className="mt-1 tabular-nums">{formatMoney(product.retailPriceCents)}</dd></div><div className="col-span-2"><dt className="text-xs text-muted">Stock</dt><dd className="mt-1 font-medium">{product.stockQuantity} units{product.stockQuantity === 0 ? " - Out of stock" : product.stockQuantity <= 10 ? " - Low stock" : ""}</dd></div></dl>
-              <div className="mt-3"><ProductActions product={product} /></div>
-            </article>)}
-          </div>
-          <div className="hidden overflow-x-auto lg:block">
-            <table className="w-full min-w-[850px] text-left text-sm">
-              <thead className="border-b border-neutral-200 bg-neutral-50 text-xs uppercase tracking-wide text-neutral-500">
-                <tr>
-                  <th className="px-6 py-4 font-medium">
-                    Product
-                  </th>
-
-                  <th className="px-6 py-4 font-medium">
-                    Category
-                  </th>
-
-                  <th className="px-6 py-4 text-right font-medium">
-                    Wholesale
-                  </th>
-
-                  <th className="px-6 py-4 text-right font-medium">
-                    MSRP
-                  </th>
-
-                  <th className="px-6 py-4 text-right font-medium">
-                    Stock
-                  </th>
-
-                  <th className="px-6 py-4 font-medium">
-                    Status
-                  </th>
-
-                  <th className="px-6 py-4 font-medium">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-
-              <tbody className="divide-y divide-neutral-100">
-                {productList.map(
-                  (product) => (
-                    <tr
-                      key={product.id}
-                      className="transition hover:bg-neutral-50/70"
-                    >
-                      {/* PRODUCT */}
-                      <td className="px-6 py-4">
-                        <p className="font-medium text-neutral-900">
-                          {product.title}
-                        </p>
-
-                        <p className="mt-1 text-xs text-neutral-500">
-                          SKU: {product.sku}
-                        </p>
-
-                        {product.brand && (
-                          <p className="mt-1 text-xs text-neutral-500">
-                            {product.brand}
-                          </p>
-                        )}
-                      </td>
-
-                      {/* CATEGORY */}
-                      <td className="px-6 py-4 text-neutral-600">
-                        {product.categoryName ??
-                          "—"}
-                      </td>
-
-                      {/* WHOLESALE */}
-                      <td className="px-6 py-4 text-right font-medium">
-                        {formatMoney(
-                          product.wholesalePriceCents
-                        )}
-                      </td>
-
-                      {/* MSRP */}
-                      <td className="px-6 py-4 text-right text-neutral-600">
-                        {formatMoney(
-                          product.retailPriceCents
-                        )}
-                      </td>
-
-                      {/* STOCK */}
-                      <td className="px-6 py-4 text-right">
-                        <span
-                          className={
-                            product.stockQuantity === 0
-                              ? "font-medium text-red-600"
-                              : product.stockQuantity <= 10
-                                ? "font-medium text-amber-600"
-                                : "text-neutral-900"
-                          }
-                        >
-                          {product.stockQuantity}
-                        </span>
-                      </td>
-
-                      {/* STATUS */}
-                      <td className="px-6 py-4">
-                        <span
-                          className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
-                            product.isActive
-                              ? "bg-green-50 text-green-700"
-                              : "bg-neutral-100 text-neutral-500"
-                          }`}
-                        >
-                          {product.isActive
-                            ? "Active"
-                            : "Archived"}
-                        </span>
-                      </td>
-
-                      {/* ACTIONS */}
-                      <td className="px-6 py-4">
-                        <ProductActions product={product} />
-                      </td>
-                    </tr>
-                  )
-                )}
-              </tbody>
-            </table>
-          </div>
-          </>
-        )}
-      </section>
+      <ProductFilters key={filtersKey} filters={filters} categories={categoryList} />
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-2 text-sm">
+        <p className="font-medium text-brand">{total.toLocaleString("en-US")} {hasFilters ? "matching " : ""}product{total === 1 ? "" : "s"}</p>
+        <p className="text-muted">{ADMIN_PRODUCTS_PAGE_SIZE} products per page</p>
+      </div>
+      {productList.length ? <>
+        <ProductsTable key={filtersKey} products={productList} categories={categoryList} />
+        <ProductPagination filters={filters} total={total} totalPages={totalPages} pageCount={productList.length} />
+      </> : <section className="ui-panel mt-6 flex min-h-[300px] flex-col items-center justify-center px-6 py-10 text-center">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#eef2ef] text-brand"><Package size={24} /></div>
+        <h2 className="mt-5 text-lg font-semibold">{hasFilters ? "No products match these filters" : "No products yet"}</h2>
+        <p className="mt-2 max-w-sm text-sm leading-6 text-muted">{hasFilters ? "Try a different search or clear the filters to see more products." : "Add your first product or import your supplier catalog using CSV."}</p>
+        <Link href={hasFilters ? "/admin/products" : "/admin/products/new"} className="ui-button mt-5">{hasFilters ? "Clear filters" : "Add product"}</Link>
+      </section>}
     </div>
   );
 }
-function ProductActions({ product }: { product: { id: string; title: string; isActive: boolean } }) {
-  return <div className="flex flex-wrap items-center gap-2">
-    <Link href={"/admin/products/" + product.id + "/edit"} aria-label={"Edit " + product.title} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-border px-3 text-xs font-medium text-brand hover:bg-background"><Pencil size={15} />Edit</Link>
-    {product.isActive && <form action={archiveProduct}><input type="hidden" name="id" value={product.id} /><button type="submit" aria-label={"Archive " + product.title} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-lg px-2 text-xs font-medium text-muted hover:bg-amber-50 hover:text-amber-800"><Archive size={15} />Archive</button></form>}
-    <DeleteProductButton id={product.id} title={product.title} />
+
+function ProductPagination({ filters, total, totalPages, pageCount }: { filters: AdminProductFilters; total: number; totalPages: number; pageCount: number }) {
+  const start = (filters.page - 1) * ADMIN_PRODUCTS_PAGE_SIZE + 1;
+  const pages = [...new Set([1, totalPages, ...Array.from({ length: 5 }, (_, index) => filters.page + index - 2).filter((page) => page > 0 && page <= totalPages)])].sort((a, b) => a - b);
+  const linkClass = "inline-flex min-h-11 min-w-11 items-center justify-center gap-1 rounded-xl border border-border bg-white px-3 text-sm font-medium text-brand transition hover:bg-neutral-100";
+  return <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+    <p className="text-sm text-muted">Showing {start.toLocaleString("en-US")}–{(start + pageCount - 1).toLocaleString("en-US")} of {total.toLocaleString("en-US")} products</p>
+    <nav aria-label="Products pagination" className="flex flex-wrap items-center gap-1">
+      {filters.page > 1 ? <Link href={adminProductsHref(filters, filters.page - 1)} prefetch={false} rel="prev" className={linkClass}><ChevronLeft size={16} /><span className="sr-only sm:not-sr-only">Previous</span></Link> : <span aria-disabled="true" className={linkClass + " opacity-40"}><ChevronLeft size={16} /><span className="sr-only sm:not-sr-only">Previous</span></span>}
+      {pages.map((page, index) => <span key={page} className="flex items-center gap-1">
+        {index > 0 && page - pages[index - 1] > 1 && <span aria-hidden="true" className="px-1 text-muted">…</span>}
+        <Link href={adminProductsHref(filters, page)} prefetch={false} aria-label={"Page " + page} aria-current={page === filters.page ? "page" : undefined} className={linkClass + (page === filters.page ? " border-brand bg-brand! text-white! hover:bg-brand!" : "")}>{page}</Link>
+      </span>)}
+      {filters.page < totalPages ? <Link href={adminProductsHref(filters, filters.page + 1)} prefetch={false} rel="next" className={linkClass}><span className="sr-only sm:not-sr-only">Next</span><ChevronRight size={16} /></Link> : <span aria-disabled="true" className={linkClass + " opacity-40"}><span className="sr-only sm:not-sr-only">Next</span><ChevronRight size={16} /></span>}
+    </nav>
+    <p className="text-xs text-muted sm:basis-full">Page {filters.page} of {totalPages}</p>
   </div>;
 }

@@ -77,6 +77,7 @@ input, select, textarea { min-width: 0; max-width: 100%; }
 .store-header-content { transition: opacity 160ms ease-out; }
 .store-header-search { transform-origin: right center; transition: transform 200ms cubic-bezier(.2, .8, .2, 1), opacity 160ms ease-out; }
 .store-header-search-field input:focus-visible { outline: none; }
+.admin-product-search:focus-visible { outline: none; }
 .ui-panel { border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--surface); }
 .ui-button { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; gap: .5rem; border-radius: var(--radius-control); padding: .625rem 1.25rem; background: var(--brand); color: white; font-size: .875rem; font-weight: 600; transition: background-color 150ms, transform 100ms; }
 .ui-button:hover { background: #24483d; }

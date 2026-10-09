@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test:media": "node --test tests/media.test.mjs tests/media-migration.test.mjs",
+    "test:admin-products": "node --test tests/admin-products.test.mjs",
     "db:media-status": "node scripts/check-media-migration.mjs",
     "db:media-migrate": "node scripts/migrate-media.mjs",
     "db:generate": "drizzle-kit generate --config=drizzle.config.ts",
