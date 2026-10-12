@@ -2,6 +2,7 @@ import {
   CheckCircle2,
   Info,
 } from "lucide-react";
+import Link from "next/link";
 
 import { ImportProductsForm } from "@/components/admin/import-products-form";
 
@@ -60,6 +61,10 @@ export default function ImportProductsPage() {
               <Column name="stock" />
               <Column name="moq" />
               <Column name="case_quantity" />
+              <Column name="product_image_url" />
+              <Column name="image_position" />
+              <Column name="image_alt_text" />
+              <Column name="variant_image_url" />
               <Column name="image_1" />
               <Column name="image_2" />
               <Column name="image_3" />
@@ -67,6 +72,9 @@ export default function ImportProductsPage() {
               <Column name="image_5" />
               <Column name="active" />
             </div>
+            <p className="mt-5 text-xs leading-5 text-muted">image_1–image_5 contain exact uploaded filenames, including extensions, from the selected image batch. product_image_url also accepts image_src or image_url. Shopify’s Image Src is supported.</p>
+            <p className="mt-3 text-xs leading-5 text-muted">sku accepts product_sku, variant_sku or item_sku. title accepts name, product_name or product_title. Every product needs a title and at least one SKU.</p>
+            <a href="/product-images-example.csv" download className="mt-3 inline-flex min-h-11 items-center text-sm font-medium text-brand underline underline-offset-4">Download example CSV</a>
           </section>
 
           <section className="rounded-2xl border border-neutral-200 bg-white p-4 sm:p-6">
@@ -104,9 +112,11 @@ export default function ImportProductsPage() {
 
               <p>
                 <strong>Images:</strong>{" "}
-                image URLs are stored with the
-                product.
+                filenames in image_1–image_5 are matched exactly within your selected batch. URLs still work through product_image_url and variant_image_url.
               </p>
+              <p><strong>Check first:</strong> missing images or invalid product identities block the import before anything changes. Changing the file or batch requires a new check.</p>
+              <p><strong>Gallery order:</strong> numbered images come first, followed by URL images. Blank image fields keep existing product images.</p>
+              <Link href="/admin/bulk-images" className="inline-flex min-h-11 items-center font-medium text-brand underline underline-offset-4">Open Bulk Images</Link>
             </div>
           </section>
         </div>

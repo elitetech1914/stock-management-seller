@@ -1,4 +1,5 @@
-import { SubmitButton } from "@/components/ui/submit-button";
+import { ProductEditForm, ProductEditSaveButton } from "@/components/admin/product-edit-form";
+import { ProductImageEditor } from "@/components/admin/product-image-editor";
 import Link from "next/link";
 import { asc, eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
@@ -68,7 +69,7 @@ export default async function EditProductPage({
         product.id
       )
     )
-    .orderBy(productImages.position);
+    .orderBy(asc(productImages.position), asc(productImages.id));
 
   /*
    * Load variants if this is an imported
@@ -123,9 +124,8 @@ export default async function EditProductPage({
         </p>
       </div>
 
-      <form
+      <ProductEditForm
         action={updateAction}
-        className="mt-10 grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]"
       >
         {/* LEFT COLUMN */}
         <div className="space-y-6">
@@ -274,29 +274,7 @@ export default async function EditProductPage({
           </section>
 
           {/* IMAGES */}
-          <section className="rounded-2xl border border-neutral-200 bg-white p-4 sm:p-6">
-            <h2 className="font-semibold">
-              Product images
-            </h2>
-
-            <p className="mt-1 text-sm text-neutral-500">
-              One image URL per line.
-            </p>
-
-            <label htmlFor="imageUrls" className="ui-label mt-5">Image URLs</label>
-            <textarea
-              id="imageUrls"
-              name="imageUrls"
-              rows={6}
-              defaultValue={images
-                .map(
-                  (image) =>
-                    image.url
-                )
-                .join("\n")}
-              className="mt-5 w-full resize-none rounded-xl border border-neutral-300 px-4 py-3 text-sm outline-none transition focus:border-[#17352c]"
-            />
-          </section>
+          <ProductImageEditor initialImages={images.map((image) => ({ reference: { imageId: image.id }, url: image.url, altText: image.altText }))} />
         </div>
 
         {/* RIGHT COLUMN */}
@@ -381,11 +359,9 @@ export default async function EditProductPage({
             </p>
           </section>
 
-          <SubmitButton
-            className="h-12 w-full rounded-xl bg-[#17352c] text-sm font-semibold text-white transition hover:bg-[#24483d]"
-           pendingLabel="Saving...">Save changes</SubmitButton>
+          <ProductEditSaveButton />
         </div>
-      </form>
+      </ProductEditForm>
 
       {/* VARIANTS */}
       {variants.length > 0 && (

@@ -1,3 +1,5 @@
+import type { CsvImportPreview } from "@/lib/media/csv-images";
+
 export type ImportState = {
   success: boolean;
   message: string;
@@ -13,6 +15,7 @@ export type ImportState = {
   failed: number;
 
   errors: string[];
+  preview: CsvImportPreview | null;
 };
 
 export const initialImportState: ImportState = {
@@ -30,4 +33,5 @@ export const initialImportState: ImportState = {
   failed: 0,
 
   errors: [],
+  preview: null,
 };

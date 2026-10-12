@@ -20,10 +20,13 @@ import {
 
 import { auth } from "@/lib/auth";
 import { slugify } from "@/lib/slugify";
+import { checkCsvImages } from "@/lib/media/csv-import";
+import { CSV_IMAGE_COLUMNS, getCsvProductImages, type CsvImageAsset, type CsvImageRow } from "@/lib/media/csv-images";
+import { mediaErrorResponse } from "@/lib/media/admin";
 
 import type { ImportState } from "./import-state";
 
-type CsvRow = {
+type CsvRow = CsvImageRow & {
   title?: string;
   url_handle?: string;
 
@@ -212,6 +215,7 @@ function emptyState(
     failed: 0,
 
     errors: [],
+    preview: null,
   };
 }
 
@@ -455,50 +459,10 @@ function groupRows(
 }
 
 function getProductImages(
-  rows: CsvRow[]
+  rows: CsvRow[],
+  assets: Map<string, CsvImageAsset>
 ) {
-  const images = new Map<
-    string,
-    {
-      url: string;
-      position: number;
-      altText: string | null;
-    }
-  >();
-
-  for (const row of rows) {
-    const url =
-      row.product_image_url?.trim();
-
-    if (!url) {
-      continue;
-    }
-
-    if (images.has(url)) {
-      continue;
-    }
-
-    images.set(url, {
-      url,
-
-      position: toInteger(
-        row.image_position,
-        images.size,
-        0
-      ),
-
-      altText:
-        row.image_alt_text?.trim() ||
-        null,
-    });
-  }
-
-  return Array.from(
-    images.values()
-  ).sort(
-    (a, b) =>
-      a.position - b.position
-  );
+  return getCsvProductImages(rows, assets);
 }
 
 function getVariantRows(
@@ -539,6 +503,7 @@ export async function importProducts(
   formData: FormData
 ): Promise<ImportState> {
   await requireAdmin();
+  void previousState;
 
   const file =
     formData.get("file");
@@ -566,18 +531,19 @@ export async function importProducts(
   }
 
   let rows: CsvRow[];
+  let duplicateColumns: string[] = [];
 
   try {
     const csvText =
       await file.text();
 
     rows = parse(csvText, {
-      columns: (
-        headers: string[]
-      ) =>
-        headers.map(
-          normalizeCsvHeader
-        ),
+      columns: (headers: string[]) => {
+        const columns = headers.map(normalizeCsvHeader);
+        duplicateColumns = columns.filter((column, index) => columns.indexOf(column) !== index);
+        if (duplicateColumns.length) throw new Error("Duplicate CSV columns after header normalization.");
+        return columns;
+      },
 
       skip_empty_lines: true,
 
@@ -587,6 +553,7 @@ export async function importProducts(
       relax_column_count: true,
     }) as CsvRow[];
   } catch (error) {
+    if (duplicateColumns.length) return emptyState(`Duplicate CSV columns: ${[...new Set(duplicateColumns)].join(", ")}. Keep only one column for each field, including aliases.`);
     console.error(
       "CSV parsing error:",
       error
@@ -618,6 +585,37 @@ export async function importProducts(
 
   const groups =
     groupRows(rows);
+
+  // Check every reference before any product/category/variant writes. Repeat
+  // this check on import so a browser preview can never authorize stale data.
+  let imageCheck;
+  try {
+    imageCheck = await checkCsvImages(db, rows, String(formData.get("batchId") ?? "").trim());
+  } catch (error) {
+    const { error: message } = await mediaErrorResponse(error).json();
+    return emptyState(message);
+  }
+  const validationErrors = [...imageCheck.errors];
+  for (const column of detectedColumns) {
+    if (/^image_\d+$/.test(column) && !CSV_IMAGE_COLUMNS.includes(column as typeof CSV_IMAGE_COLUMNS[number]) && rows.some((row) => Boolean((row as Record<string, string | undefined>)[column]?.trim()))) {
+      validationErrors.push(`Unsupported column "${column}". Use image_1 through image_5 for uploaded filenames.`);
+    }
+  }
+  for (const group of groups) {
+    if (!firstNonEmpty(group.rows, "title")) validationErrors.push(`Product "${group.key}": could not determine a title.`);
+    if (!getVariantRows(group.rows)[0]?.sku) validationErrors.push(`Product "${group.key}": no SKU was found for the product.`);
+  }
+  imageCheck.preview.productCount = groups.length;
+  imageCheck.preview.ready = validationErrors.length === 0;
+  if (validationErrors.length || formData.get("mode") === "preview") {
+    return {
+      ...emptyState(validationErrors.length ? "CSV check found issues. No products were changed." : "CSV checked. Review the images, then import products."),
+      success: validationErrors.length === 0,
+      totalRows: rows.length,
+      errors: validationErrors.slice(0, 50),
+      preview: imageCheck.preview,
+    };
+  }
 
   let created = 0;
   let updated = 0;
@@ -909,40 +907,22 @@ export async function importProducts(
        */
       const productImageRows =
         getProductImages(
-          groupRows
+          groupRows,
+          imageCheck.assets
         );
 
       if (
         productImageRows.length > 0
       ) {
-        await db
-          .delete(productImages)
-          .where(
-            eq(
-              productImages.productId,
-              productId
-            )
-          );
-
-        await db
-          .insert(productImages)
-          .values(
-            productImageRows.map(
-              (image, index) => ({
-                productId,
-
-                url: image.url,
-
-                altText:
-                  image.altText ||
-                  title,
-
-                position:
-                  image.position ??
-                  index,
-              })
-            )
-          );
+        await db.transaction(async (tx) => {
+          await tx.delete(productImages).where(eq(productImages.productId, productId));
+          await tx.insert(productImages).values(productImageRows.map((image, index) => ({
+            productId,
+            url: image.url,
+            altText: image.altText || title,
+            position: image.position ?? index,
+          })));
+        });
       }
 
       /*
@@ -1093,6 +1073,9 @@ export async function importProducts(
   );
 
   revalidatePath("/");
+  revalidatePath("/products");
+  revalidatePath("/products/[slug]", "page");
+  revalidatePath("/categories/[slug]", "page");
 
   return {
     success:
@@ -1116,5 +1099,6 @@ export async function importProducts(
 
     errors:
       errors.slice(0, 50),
+    preview: null,
   };
 }

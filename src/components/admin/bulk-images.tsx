@@ -3,10 +3,12 @@
 /* eslint-disable @next/next/no-img-element -- These are already optimized Garage images. */
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { CheckCircle2, Copy, ImagePlus, Loader2, UploadCloud, X } from "lucide-react";
 
 import { BatchSelect } from "@/components/admin/batch-select";
-import { MAX_IMAGE_BYTES, MAX_UPLOAD_SELECTION, UPLOAD_CONCURRENCY, type MediaAssetView } from "@/lib/media/shared";
+import { MAX_UPLOAD_SELECTION, UPLOAD_CONCURRENCY, type MediaAssetView } from "@/lib/media/shared";
+import { sendMediaFile, validateUploadFile } from "@/lib/media/upload-client";
 
 type Batch = { id: string; name: string; createdAt: string };
 type Upload = {
@@ -27,28 +29,6 @@ async function jsonRequest(url: string, init?: RequestInit) {
   return data;
 }
 
-function sendFile(batchId: string, file: File, progress: (percent: number, processing: boolean) => void) {
-  return new Promise<MediaAssetView>((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", `/api/admin/media/upload?batchId=${encodeURIComponent(batchId)}`);
-    xhr.timeout = 150_000;
-    xhr.setRequestHeader("Content-Type", file.type || "application/octet-stream");
-    xhr.setRequestHeader("X-File-Name", encodeURIComponent(file.name));
-    xhr.upload.onprogress = (event) => {
-      if (event.lengthComputable) progress(Math.min(99, Math.round(event.loaded / event.total * 100)), event.loaded === event.total);
-    };
-    xhr.onload = () => {
-      try {
-        const data = JSON.parse(xhr.responseText);
-        if (xhr.status >= 200 && xhr.status < 300) resolve(data.asset);
-        else reject(new Error(data.error || "Upload failed. Please retry."));
-      } catch { reject(new Error("Unexpected upload response. Refresh the library before retrying.")); }
-    };
-    xhr.onerror = () => reject(new Error("Network error. Refresh the library before retrying."));
-    xhr.ontimeout = () => reject(new Error("Upload timed out. Refresh the library before retrying."));
-    xhr.send(file);
-  });
-}
 
 export function BulkImages() {
   const [batches, setBatches] = useState<Batch[]>([]);
@@ -125,9 +105,7 @@ export function BulkImages() {
     for (const file of files) {
       if (names.has(file.name)) { duplicates++; continue; }
       names.add(file.name);
-      const invalid = !/\.(jpe?g|png|webp)$/i.test(file.name) || !["image/jpeg", "image/png", "image/webp"].includes(file.type)
-        ? "Choose JPG, PNG or WebP images."
-        : !file.size || file.size > MAX_IMAGE_BYTES ? "Each image must be between 1 byte and 10 MiB." : undefined;
+      const invalid = validateUploadFile(file);
       additions.push({ id: crypto.randomUUID(), file, state: invalid ? "error" : "queued", progress: 0, error: invalid });
     }
     setUploads((previous) => [...previous, ...additions]);
@@ -160,7 +138,7 @@ export function BulkImages() {
         const item = queue[next++];
         updateUpload(item.id, { state: "uploading", progress: 0, error: undefined });
         try {
-          await sendFile(batchId, item.file, (progress, processing) => {
+          await sendMediaFile(batchId, item.file, (progress, processing) => {
             updateUpload(item.id, { progress, state: processing ? "processing" : "uploading" });
           });
           updateUpload(item.id, { state: "success", progress: 100 });
@@ -265,10 +243,10 @@ export function BulkImages() {
 
       <section className="rounded-2xl border border-neutral-200 bg-white p-4 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <div><h2 className="font-semibold">Batch library</h2><p className="mt-1 text-sm text-neutral-500">Copy an image URL into a product’s Image URLs field to use it now.</p></div>
+          <div><h2 className="font-semibold">Batch library</h2><p className="mt-1 text-sm text-neutral-500">Choose these images in the product editor, use filenames in a CSV import, or copy URLs when creating a product.</p></div>
           <button type="button" disabled={!batchId || busy || loading} onClick={() => loadAssets()} className="text-sm font-medium text-[#17352c] disabled:opacity-50">Refresh</button>
         </div>
-        <p className="mt-3 text-xs leading-5 text-neutral-500">Uploading images does not assign them to products. Add the copied URLs when creating or editing a product.</p>
+        <p className="mt-3 text-xs leading-5 text-neutral-500">Uploading images does not assign them to products. Choose this batch in Edit product, or in <Link href="/admin/import" className="font-medium text-brand underline underline-offset-4">Import products</Link> match exact filenames using image_1–image_5.</p>
         {loading ? <p role="status" className="mt-8 flex items-center gap-2 text-sm text-neutral-500"><Loader2 size={16} className="animate-spin" />Loading library…</p>
           : !assets.length ? <p className="py-12 text-center text-sm text-neutral-500">{batchId ? "No images uploaded in this batch yet." : "Select a batch to view its images."}</p>
           : <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">

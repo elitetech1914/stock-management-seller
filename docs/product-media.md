@@ -1,19 +1,48 @@
-# Product media: upload foundation
+# Product media: uploads, CSV matching and product galleries
 
-This milestone adds **Admin → Bulk Images** at `/admin/bulk-images`. It extends the existing admin dashboard and Better Auth authorization. It does not modify products, variants, orders, the CSV importer, product card heights, or the existing URL-based product editor.
+**Admin → Bulk Images** manages uploaded assets. **Import products** adds batch selection, CSV filename matching and a read-only CSV check. **Edit product** adds a visual gallery with library selection and computer uploads. All three reuse the existing admin authorization, media infrastructure and product image tables. Storefront card heights are unchanged. Add product retains its existing URL field.
 
 ## Available workflow
 
 1. Create an import batch for a supplier delivery.
 2. Select or drop up to 500 images into the upload list, then click Upload. Two files upload at a time. Individual progress, processing, success, failure and retry states are shown.
 3. Review uploaded images in the batch library. The library and batch selector load in pages of 100.
-4. Copy an image's relative URL and paste it into the existing product editor's **Image URLs** field. The current editor orders images by line; its first image is the primary image. Saving still uses the existing `product_images` implementation.
+4. In **Import products**, select this batch, choose a CSV with exact original filenames in `image_1`–`image_5`, and click **Check CSV**. Review matches, then click **Import products**. Alternatively, edit a product, choose a batch and add images from its library, or upload computer files directly from the editor. Click **Save changes** to apply gallery edits.
 
 Original filenames are preserved exactly, including case and Unicode. A database constraint rejects duplicate filenames within a batch rather than permitting ambiguous matches. Another batch can contain the same filename. Uploaded assets are independent of products and survive changes to product titles. Only successfully stored uploads enter `media_assets`; upload failures remain in the current browser list and can be retried.
 
-This is the first functional milestone. Automatic CSV filename matching, CSV preview reports, product-derived SEO filenames/default alt text, library deletion, and a gallery editor with reorder/primary/alt-text controls remain subsequent milestones. Upload CSVs using the existing supported URL columns until filename matching is added; the old help panel's `image_1` listing is not implemented by the current importer. Uploading images does not automatically associate them with products.
+Uploading alone does not assign images to products. CSV filename matching, preview reports and the edit-product gallery with ordering/primary/removal controls are implemented. Library deletion, product-derived SEO filenames and explicit gallery alt-text editing remain subsequent milestones. Imported/newly attached images use the product title as default alt text; existing gallery alt text is preserved.
 
-The planned CSV extension will select an import batch and resolve `image_1`, `image_2`, etc. by `(batch_id, original_filename)` only. Missing references must be reported before assigning images. Product identity can continue to use SKU independently. The media route already permits descriptive URL filenames such as `/media/<asset UUID>/stainless-steel-travel-mug-1.webp`, so a later product association can generate SEO names without moving objects or discarding supplier filenames.
+## Edit-product gallery
+
+- The URL textarea is replaced with image thumbnails. Existing external URLs remain supported; failed image loading shows a placeholder without removing the image.
+- Choose an existing batch, load older batches, or create one in the editor. **Choose from library** lists images in pages of 100 with a bounded scrolling panel. Select images and click **Add selected images**. Assets already attached are marked and cannot be added again.
+- **Upload from computer** accepts file selection and drag-and-drop. Click Upload to process two files at a time using the same transport, validation, WebP conversion, progress and retry behavior as Bulk Images. Successful uploads append in original file-selection order, independent of completion order. Up to 500 images can be attached to a product.
+- Remove, move earlier/later, or make primary using keyboard-accessible buttons. The first gallery entry is primary. Removing an attachment does not delete the underlying asset or object.
+- Queued, active and failed uploads block product saving until uploaded, retried or removed. Batch/library loading failures do not prevent saving a gallery made only of existing product images. After upload timeouts, refresh the library before retrying because the server may have saved the image already.
+- Save submits ordered `{imageId}` or `{assetId}` references, never new arbitrary URLs or file bytes. The action verifies admin access and product existence, validates reference IDs, ensures existing images belong to this product, and confirms uploaded assets still exist. It deduplicates immutable media identities and saves all product fields and gallery rows in one transaction. New attachments use the current product title for alt text; existing alt text, including null values, is preserved.
+- Inline save failures retain product fields and gallery edits for retry. Success redirects to the product list and refreshes admin/catalog/category/product pages. Discarding the editor leaves the published gallery unchanged; completed uploads remain in their selected batch.
+- No new tables or migration are introduced by the visual editor. Uploaded assets and filename matching still require the existing media migration and runtime storage configuration.
+
+## Exact CSV columns and import checks
+
+| Column | Behavior / accepted aliases |
+| --- | --- |
+| `sku` | Required header; aliases `product_sku`, `variant_sku`, `item_sku`, or Shopify `Variant SKU`. Every product group needs at least one SKU. |
+| `title` | Every product group needs a title; aliases `name`, `product_name`, `product_title`. Continuation rows sharing a Shopify handle may omit it. |
+| `image_1`–`image_5` | Exact uploaded filenames with extensions, matched only by `(batch_id, original_filename)`. Select the image batch in the form. URLs and paths do not belong in these columns. |
+| `product_image_url` | Existing URL support; aliases `image_src`, `image_url`, or Shopify `Image Src`. No batch/media tables required for URL-only files. |
+| `image_position` | Existing URL gallery ordering; ignored for numbered filenames. |
+| `image_alt_text` | Optional alt text; defaults to the product title. |
+| `variant_image_url` | Existing variant image URL; aliases `variant_image` or Shopify `Variant Image`. Filename matching does not apply to this field. |
+
+Headers are case-insensitive and spaces/punctuation normalize to underscores. Original image filenames remain case- and Unicode-sensitive; no fuzzy or cross-batch lookup is used. Duplicate normalized headers and nonempty numbered image columns outside `image_1`–`image_5` are rejected. `/product-images-example.csv` is a downloadable sample; replace the sample filenames with images you uploaded.
+
+**Check CSV** performs no writes. It reports product/image-reference counts and the first 50 image references with matches; every reference is checked even when the preview is abbreviated. Matching queries use groups of up to 500 distinct filenames. Missing images, missing batches, invalid product identities or unsupported numbered columns block the entire import before any product/category/variant changes. Changing the chosen CSV or batch invalidates the UI check. Import checks the actual uploaded CSV and selected batch again rather than trusting a prior preview.
+
+Within each product, numbered images are ordered by `image_1` through `image_5`, skipping empty slots and duplicate URLs. The first supplied image is primary. Existing URL images follow numbered filenames if both are supplied; URL-only files retain their existing `image_position` ordering. Nonempty supplied galleries replace the old gallery in a transaction; no image references leave existing galleries unchanged. Product/category/variant writes retain the existing importer behavior, so runtime failures can still result in a partially completed catalog import, reported in the result. A filename-validation failure causes no catalog writes.
+
+The media route already permits descriptive URL filenames such as `/media/<asset UUID>/stainless-steel-travel-mug-1.webp`, so later product association improvements can generate SEO names without moving objects or discarding supplier filenames.
 
 ## Storage, limits and delivery
 
@@ -76,6 +105,8 @@ The processing/route checks use the existing TypeScript dependency and Node's bu
 ```sh
 npm ci
 npm run test:media
+npm run test:csv-images
+npm run test:product-gallery
 npx tsc --noEmit
 npm run db:check
 npm run lint
@@ -93,7 +124,9 @@ npm run dev
 
 Open `http://localhost:3000/admin/bulk-images` after signing in as an admin. Verify multiple files, a failed file and retry; duplicate names in one batch; identical names in different batches; image persistence after reload; and a copied URL in the existing product editor, product card, gallery and cart. Check that unsigned requests and buyer accounts cannot list/create/upload. After saving product image URLs, verify existing category/product navigation and checkout still work.
 
-The production build and TypeScript check pass. Repository-wide lint currently has pre-existing errors in `order-select.tsx`, `cart-page.tsx`, `catalog-filters.tsx`, `checkout-form.tsx` and `store-products.ts`; no unrelated fixes were included. Focused media lint has no errors; the existing sidebar navigation warning remains. Live authenticated DB/Garage upload verification requires the above runtime services and migration; the isolated tests do not substitute for that deployment check.
+CSV tests run the actual importer and Drizzle queries against connection-local temporary commerce/media tables, including alias headers, preview without writes, exact filenames, cross-batch isolation, missing images, reimports, gallery ordering and legacy Shopify URL behavior. They never modify the real catalog. Live authenticated DB/Garage upload verification still requires the above runtime services and migration; isolated tests do not substitute for that deployment check.
+
+Gallery tests additionally cover the real edit page, reference validation/ownership, alt-text preservation, primary/order changes, detachment, and rollback of both fields and gallery rows on a save failure. The shared browser upload transport is tested for filename/raw-file/progress handling and network/timeout/conflict responses. Browser checks use the real editor components with simulated APIs and uploads; real S3 persistence remains a deployment check.
 
 ## Files changed
 

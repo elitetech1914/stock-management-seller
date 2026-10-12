@@ -16,13 +16,29 @@ import {
 
 import { importProducts } from "@/app/admin/(panel)/import/actions";
 import { initialImportState } from "@/app/admin/(panel)/import/import-state";
+import { ImportImageBatch } from "./import-image-batch";
 
 export function ImportProductsForm() {
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [batchId, setBatchId] = useState("");
+  const [selectionVersion, setSelectionVersion] = useState(0);
+  const [submittedVersion, setSubmittedVersion] = useState(-1);
+  const [submittedMode, setSubmittedMode] = useState("preview");
   const [state, formAction, isPending] =
     useActionState(
-      importProducts,
+      async (previous: typeof initialImportState, data: FormData) => {
+        if (selectedFile) data.set("file", selectedFile);
+        data.set("batchId", batchId);
+        data.set("mode", String(data.get("mode") || "preview"));
+        setSubmittedVersion(selectionVersion);
+        setSubmittedMode(String(data.get("mode") || "preview"));
+        try { return await importProducts(previous, data); }
+        catch { return { ...initialImportState, message: "Could not process the CSV. Check your admin access and try again." }; }
+      },
       initialImportState
     );
+  const currentResult = submittedVersion === selectionVersion;
+  const previewReady = currentResult && state.preview?.ready === true;
 
   const [fileName, setFileName] =
     useState("");
@@ -39,10 +55,14 @@ export function ImportProductsForm() {
     setFileName(
       file?.name ?? ""
     );
+    setSelectedFile(file ?? null);
+    setSelectionVersion((version) => version + 1);
   }
 
   function clearFile() {
     setFileName("");
+    setSelectedFile(null);
+    setSelectionVersion((version) => version + 1);
 
     setInputKey(
       (current) => current + 1
@@ -86,7 +106,7 @@ export function ImportProductsForm() {
 
               <p className="mt-0.5 text-xs text-neutral-500">
                 {fileName
-                  ? "File ready for import"
+                  ? previewReady ? "CSV checked — ready to import" : "File selected — check before importing"
                   : "Stockmora or Shopify CSV"}
               </p>
             </div>
@@ -104,7 +124,7 @@ export function ImportProductsForm() {
                 handleFileChange
               }
               className="sr-only"
-              required
+              required={!selectedFile}
               disabled={isPending}
             />
           </label>
@@ -123,22 +143,29 @@ export function ImportProductsForm() {
             )}
         </div>
 
+        <ImportImageBatch value={batchId} disabled={isPending} onChange={(value) => { setBatchId(value); setSelectionVersion((version) => version + 1); }} />
+
         {/* SUBMIT */}
         <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-neutral-100 pt-5">
           <p className="text-xs text-neutral-500">
-            Large catalogs may take a
-            moment to process.
+            Check the CSV and image matches before importing. No products change during the check.
           </p>
 
+          <div className="flex flex-wrap gap-3">
+          <button type="submit" name="mode" value="preview" disabled={isPending || !fileName} className="ui-button ui-button-secondary">
+            {isPending && submittedMode === "preview" ? <><Loader2 size={16} className="animate-spin" />Checking…</> : "Check CSV"}
+          </button>
           <button
             type="submit"
+            name="mode"
+            value="import"
             disabled={
               isPending ||
-              !fileName
+              !fileName || !previewReady
             }
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#17352c] px-5 text-sm font-semibold text-white transition hover:bg-[#21483d] disabled:cursor-not-allowed disabled:opacity-50"
+            className="ui-button"
           >
-            {isPending ? (
+            {isPending && submittedMode === "import" ? (
               <>
                 <Loader2
                   size={16}
@@ -155,11 +182,12 @@ export function ImportProductsForm() {
               </>
             )}
           </button>
+          </div>
         </div>
       </form>
 
       {/* IMPORT RESULT */}
-      {state.message && (
+      {currentResult && state.message && (
         <section role={state.success ? "status" : "alert"}
           className={`rounded-2xl border p-5 ${
             state.success
@@ -214,7 +242,7 @@ export function ImportProductsForm() {
                         : "text-red-700"
                   }`}
                 >
-                  Processed{" "}
+                  {state.preview ? "Checked " : "Processed "}
                   {state.totalRows} CSV{" "}
                   {state.totalRows ===
                   1
@@ -228,7 +256,7 @@ export function ImportProductsForm() {
 
           {/* RESULT COUNTS */}
           {state.totalRows >
-            0 && (
+            0 && !state.preview && (
             <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
               <Result
                 label="Products created"
@@ -266,6 +294,26 @@ export function ImportProductsForm() {
               />
             </div>
           )}
+
+          {state.preview && <div className="mt-5 space-y-4">
+            <div className="grid gap-3 sm:grid-cols-3">
+              <Result label="Products in CSV" value={state.preview.productCount} />
+              <Result label="Image references" value={state.preview.imageReferences} />
+              <Result label="Images matched" value={state.preview.matchedImages} />
+            </div>
+            {!!state.preview.samples.length && <div className="max-h-80 overflow-auto rounded-xl border border-black/5 bg-white/70">
+              <table className="w-full text-left text-sm">
+                <caption className="p-4 text-left text-sm font-medium text-brand">Image matches{state.preview.truncated ? " — first 50 references" : ""}</caption>
+                <thead className="border-y border-black/5 text-xs text-muted"><tr><th scope="col">Row / SKU</th><th scope="col">Column / Filename</th><th scope="col">Match</th></tr></thead>
+                <tbody className="divide-y divide-black/5">{state.preview.samples.map((sample, index) => <tr key={index}>
+                  <td className="align-top">{sample.row}<p className="mt-1 text-xs text-muted">{sample.sku}</p></td>
+                  <td className="break-words align-top"><p className="text-xs text-muted">{sample.column}</p><p className="mt-1">{sample.filename}</p></td>
+                  <td className="align-top">{sample.url ? <a href={sample.url} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center font-medium text-emerald-700 underline underline-offset-4" aria-label={`View matched image ${sample.filename}`}>Matched</a> : <span className="text-red-700">Missing</span>}</td>
+                </tr>)}</tbody>
+              </table>
+            </div>}
+            <p className="text-xs leading-5 text-muted">Numbered filenames set gallery order; the first supplied image is primary. Image URLs follow numbered images when both are supplied. Existing galleries stay unchanged when no images are supplied.</p>
+          </div>}
 
           {/* ERRORS */}
           {state.errors.length >
