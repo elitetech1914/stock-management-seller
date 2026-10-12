@@ -1,0 +1,96 @@
+.panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  background: #fff;
+}
+
+.scene {
+  position: relative;
+  width: 100%;
+  max-width: 620px;
+  min-height: 340px;
+  aspect-ratio: 1;
+  container-type: inline-size;
+}
+
+.shapes {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.shapes > span {
+  position: absolute;
+  box-shadow: 0 24px 40px rgb(35 44 32 / 13%);
+}
+
+.creamShape {
+  top: 17%;
+  left: 11%;
+  width: 33%;
+  height: 38%;
+  border-radius: 44% 44% 18% 18%;
+  background: #e8ddd0;
+  transform: rotate(-7deg);
+}
+
+.brownShape {
+  top: 20%;
+  left: 50%;
+  width: 36%;
+  height: 40%;
+  border-radius: 12%;
+  background: #b18c61;
+  transform: rotate(7deg);
+}
+
+.domeShape {
+  bottom: 9%;
+  left: 29%;
+  width: 41%;
+  height: 29%;
+  border-radius: 50% 50% 16% 16% / 70% 70% 18% 18%;
+  background: #f1eee6;
+}
+
+.marginCard {
+  position: absolute;
+  right: 5.5%;
+  bottom: 5.5%;
+  width: clamp(210px, 43%, 280px);
+  padding: clamp(16px, 2.8cqi, 22px);
+  border: 1px solid rgb(23 53 44 / 5%);
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 14px 30px rgb(35 44 32 / 12%);
+}
+
+.label,
+.description {
+  color: #737373;
+  font-size: clamp(12px, 2.2cqi, 14px);
+  line-height: 1.65;
+}
+
+.value {
+  margin-top: 4px;
+  color: #171717;
+  font-size: clamp(24px, 6cqi, 36px);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 1.15;
+}
+
+.description {
+  margin-top: 10px;
+}
+
+@container (width < 400px) {
+  .domeShape {
+    left: 8%;
+    width: 56%;
+    height: 34%;
+  }
+}

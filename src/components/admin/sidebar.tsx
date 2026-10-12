@@ -197,9 +197,9 @@ export function AdminSidebar() {
       <div className="sticky top-0 hidden h-dvh shrink-0 xl:block">
         <aside className="flex h-full w-[255px] flex-col border-r border-neutral-200 bg-white">{content}</aside>
       </div>
-      <header className="sticky top-0 z-40 flex h-16 items-center justify-between gap-3 border-b border-neutral-200 bg-white/90 px-4 backdrop-blur-xl xl:hidden">
+      <header className="sticky top-0 z-40 flex h-16 items-center gap-3 border-b border-neutral-200 bg-white/90 px-4 backdrop-blur-xl xl:hidden">
+        <button type="button" onClick={show} aria-label="Open admin navigation" aria-expanded={open} aria-haspopup="dialog" aria-controls="admin-navigation-menu" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-neutral-200 hover:bg-neutral-50 focus-visible:outline-2 focus-visible:outline-[#17352c]"><Menu size={22} /></button>
         <Link href="/admin" className="text-xl font-semibold tracking-tight">Stockmora <span className="text-xs font-normal text-neutral-500">Admin</span></Link>
-        <button type="button" onClick={show} aria-label="Open admin navigation" aria-expanded={open} aria-haspopup="dialog" aria-controls="admin-navigation-menu" className="flex h-11 w-11 items-center justify-center rounded-xl border border-neutral-200 hover:bg-neutral-50 focus-visible:outline-2 focus-visible:outline-[#17352c]"><Menu size={22} /></button>
       </header>
       <dialog ref={dialogRef} id="admin-navigation-menu" className="navigation-dialog admin-menu" aria-label="Admin navigation" onClose={onClose} onClick={(event) => { if (event.target === event.currentTarget) close(); }}>
         <button type="button" onClick={close} aria-label="Close admin navigation" className="absolute right-3 top-4 flex h-11 w-11 items-center justify-center rounded-full hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-[#17352c]"><X size={21} /></button>

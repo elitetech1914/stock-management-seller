@@ -1,7 +1,7 @@
-/* eslint-disable @next/next/no-img-element */
 export const dynamic = "force-dynamic";
 import Link from "next/link";
-import { ArrowRight, Box, Grid2X2, PackageCheck } from "lucide-react";
+import { ArrowRight, Grid2X2, PackageCheck } from "lucide-react";
+import { HeroGraphic } from "@/components/store/hero-graphic";
 import { ProductCard } from "@/components/store/product-card";
 import { getStoreProducts } from "@/lib/store-products";
 import { getStoreCategories } from "@/lib/store-catalog";
@@ -9,7 +9,6 @@ import { siteConfig } from "@/config/site";
 
 export default async function Home() {
   const [products, categories] = await Promise.all([getStoreProducts(8), getStoreCategories()]);
-  const featured = products.find((product) => product.imageUrl);
   return (
     <main className="min-h-screen bg-background text-foreground">
       <section className="mx-auto max-w-[1500px] px-4 py-5 sm:px-6 lg:px-8">
@@ -23,10 +22,7 @@ export default async function Home() {
               <Link href="/register" className="inline-flex min-h-11 items-center text-sm font-semibold text-brand underline underline-offset-4">Create buyer account</Link>
             </div>
           </div>
-          {featured?.imageUrl ? <Link href={"/products/" + featured.slug} className="relative hidden min-h-[320px] bg-white sm:block">
-            <img src={featured.imageUrl} alt={featured.title} className="h-full max-h-[480px] w-full object-contain p-8" />
-            <div className="absolute bottom-5 left-5 right-5 ui-panel flex items-center justify-between gap-3 p-4"><span className="min-w-0 truncate text-sm font-medium">{featured.title}</span><ArrowRight size={18} className="shrink-0" /></div>
-          </Link> : <div aria-hidden="true" className="hidden flex-col justify-center border-l border-brand/10 p-12 text-brand lg:flex"><Box size={56} strokeWidth={1} /><p className="mt-5 text-3xl font-semibold tracking-tight">{siteConfig.tagline}</p></div>}
+          <HeroGraphic />
         </div>
       </section>
       {categories.length > 0 && <section className="mx-auto max-w-[1500px] px-4 py-6 sm:px-6 lg:px-8">
