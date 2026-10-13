@@ -73,7 +73,7 @@ export default function AdminLoginPage() {
               required
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              placeholder="admin@stockmora.com"
+              placeholder="admin@example.com"
               className="h-12 w-full rounded-xl border border-neutral-300 px-4 outline-none transition focus:border-[#17352c]"
             />
           </div>

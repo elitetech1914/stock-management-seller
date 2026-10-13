@@ -4,11 +4,12 @@ import { redirect } from "next/navigation";
 
 import { CheckoutForm } from "@/components/store/checkout-form";
 import { auth } from "@/lib/auth";
+import { siteConfig } from "@/config/site";
 
 export const metadata: Metadata = {
-  title: "Checkout | Stockmora",
+  title: "Checkout",
   description:
-    "Complete your Stockmora wholesale order.",
+    `Complete your ${siteConfig.name} wholesale order.`,
 };
 
 export default async function CheckoutPage() {

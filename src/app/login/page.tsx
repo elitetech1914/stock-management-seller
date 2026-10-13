@@ -14,6 +14,7 @@ import {
 } from "react";
 
 import { authClient } from "@/lib/auth-client";
+import { siteConfig } from "@/config/site";
 
 function getSafeRedirect() {
   if (typeof window === "undefined") {
@@ -138,7 +139,7 @@ export default function LoginPage() {
               href="/"
               className="inline-block text-3xl font-semibold tracking-[-0.05em]"
             >
-              stockmora
+              {siteConfig.name}
             </Link>
 
             <div className="mt-20 max-w-md">
@@ -147,8 +148,7 @@ export default function LoginPage() {
               </p>
 
               <h1 className="mt-5 text-4xl font-semibold leading-tight tracking-[-0.045em]">
-                Welcome back to your
-                Stockmora account.
+                Welcome back to your {siteConfig.name} account.
               </h1>
 
               <p className="mt-5 max-w-sm text-base leading-7 text-white/70">
@@ -178,7 +178,7 @@ export default function LoginPage() {
                 href="/"
                 className="mb-8 inline-block text-2xl font-semibold tracking-[-0.05em] text-[#17352c] lg:hidden"
               >
-                stockmora
+                {siteConfig.name}
               </Link>
 
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#557268]">
@@ -326,7 +326,7 @@ export default function LoginPage() {
             {/* REGISTER */}
             <div className="mt-8 border-t border-neutral-200 pt-7 text-center">
               <p className="text-sm text-neutral-500">
-                New to Stockmora?{" "}
+                New to {siteConfig.name}?{" "}
                 <Link
                   href="/register"
                   className="font-semibold text-[#17352c] transition hover:text-[#0e2a21]"

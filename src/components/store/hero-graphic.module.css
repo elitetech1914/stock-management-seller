@@ -10,20 +10,76 @@
   position: relative;
   width: 100%;
   max-width: 620px;
-  min-height: 340px;
-  aspect-ratio: 1;
+  padding-bottom: 112px;
   container-type: inline-size;
 }
 
 .shapes {
-  position: absolute;
-  inset: 0;
+  position: relative;
+  width: 100%;
+  min-height: 340px;
+  aspect-ratio: 1;
   pointer-events: none;
 }
 
-.shapes > span {
+.shapes > div {
   position: absolute;
+  pointer-events: auto;
+}
+
+.float,
+.tile {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+}
+
+.float {
+  animation: float 8s ease-in-out infinite;
+  animation-delay: -2s;
+}
+
+.tile {
+  position: relative;
+  overflow: hidden;
+  background: var(--shape-color);
   box-shadow: 0 24px 40px rgb(35 44 32 / 13%);
+  transition: transform 250ms cubic-bezier(.2, .8, .2, 1);
+}
+
+.tile img {
+  object-fit: cover;
+}
+
+.headphones {
+  object-position: 66% center;
+}
+
+.sneakers {
+  object-position: 51% center;
+}
+
+.glasses {
+  object-position: center 58%;
+}
+
+.brownShape .float {
+  animation-duration: 9s;
+  animation-delay: -5s;
+}
+
+.domeShape .float {
+  animation-duration: 10s;
+  animation-delay: -7s;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .tile:hover { transform: scale(1.02); }
 }
 
 .creamShape {
@@ -32,7 +88,7 @@
   width: 33%;
   height: 38%;
   border-radius: 44% 44% 18% 18%;
-  background: #e8ddd0;
+  --shape-color: #e8ddd0;
   transform: rotate(-7deg);
 }
 
@@ -42,7 +98,7 @@
   width: 36%;
   height: 40%;
   border-radius: 12%;
-  background: #b18c61;
+  --shape-color: #b18c61;
   transform: rotate(7deg);
 }
 
@@ -52,22 +108,51 @@
   width: 41%;
   height: 29%;
   border-radius: 50% 50% 16% 16% / 70% 70% 18% 18%;
-  background: #f1eee6;
+  --shape-color: #f1eee6;
 }
 
 .marginCard {
   position: absolute;
   right: 5.5%;
   bottom: 5.5%;
-  width: clamp(210px, 43%, 280px);
+  width: clamp(220px, 52%, 320px);
+  max-width: 89%;
   padding: clamp(16px, 2.8cqi, 22px);
   border: 1px solid rgb(23 53 44 / 5%);
   border-radius: 20px;
   background: #fff;
   box-shadow: 0 14px 30px rgb(35 44 32 / 12%);
+  transform-origin: bottom right;
 }
 
-.label,
+.marginCard[data-reveal="pending"] {
+  opacity: 0;
+  transform: translateY(12px) scale(.94);
+}
+
+.marginCard[data-reveal="visible"] {
+  animation: cardReveal 600ms cubic-bezier(.16, 1, .3, 1) backwards;
+}
+
+@keyframes cardReveal {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(.94);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.label {
+  color: #64716b;
+  font-size: clamp(10px, 1.8cqi, 12px);
+  font-weight: 600;
+  letter-spacing: .08em;
+  line-height: 1.5;
+}
+
 .description {
   color: #737373;
   font-size: clamp(12px, 2.2cqi, 14px);
@@ -77,7 +162,7 @@
 .value {
   margin-top: 4px;
   color: #171717;
-  font-size: clamp(24px, 6cqi, 36px);
+  font-size: clamp(22px, 4.8cqi, 30px);
   font-weight: 600;
   letter-spacing: -0.035em;
   line-height: 1.15;
@@ -87,10 +172,30 @@
   margin-top: 10px;
 }
 
+.phrase {
+  display: inline-block;
+  white-space: nowrap;
+}
+
 @container (width < 400px) {
+  .shapes {
+    margin-bottom: 48px;
+  }
+
   .domeShape {
     left: 8%;
     width: 56%;
     height: 34%;
   }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .float { animation: none; }
+  .marginCard[data-reveal] {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .tile { transition: none; }
+  .tile:hover { transform: none; }
 }

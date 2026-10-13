@@ -364,7 +364,7 @@ function cleanCategoryName(
    * Clothing Tops >
    * T-Shirts
    *
-   * For now Stockmora keeps the leaf:
+   * For now the importer keeps the leaf:
    * T-Shirts
    */
   const parts = category

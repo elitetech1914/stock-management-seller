@@ -3,11 +3,12 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 import  BuyerAuthForm  from "@/components/store/buyer-auth-form";
+import { siteConfig } from "@/config/site";
 
 export const metadata: Metadata = {
-  title: "Create Buyer Account | Stockmora",
+  title: "Create Buyer Account",
   description:
-    "Create your Stockmora wholesale buyer account.",
+    `Create your ${siteConfig.name} wholesale buyer account.`,
 };
 
 export default function RegisterPage() {

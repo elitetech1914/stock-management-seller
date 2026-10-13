@@ -6,6 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { db } from "@/db";
 import { categories } from "@/db/schema";
 import { createProduct } from "../actions";
+import { siteConfig } from "@/config/site";
 
 export default async function NewProductPage() {
   const categoryList = await db
@@ -83,7 +84,7 @@ export default async function NewProductPage() {
                 <Field
                   label="Brand"
                   name="brand"
-                  placeholder="Stockmora"
+                  placeholder={siteConfig.name}
                 />
               </div>
 

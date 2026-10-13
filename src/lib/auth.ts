@@ -2,6 +2,7 @@ import { betterAuth } from "better-auth";
 import { admin } from "better-auth/plugins";
 
 import { pool } from "../db/pool";
+import { siteConfig } from "../config/site";
 
 const isProduction =
   process.env.NODE_ENV === "production";
@@ -41,7 +42,7 @@ const trustedOrigins =
       ];
 
 export const auth = betterAuth({
-  appName: "Stockmora",
+  appName: siteConfig.name,
 
   database: pool,
 

@@ -17,6 +17,7 @@ import {
 import { importProducts } from "@/app/admin/(panel)/import/actions";
 import { initialImportState } from "@/app/admin/(panel)/import/import-state";
 import { ImportImageBatch } from "./import-image-batch";
+import { siteConfig } from "@/config/site";
 
 export function ImportProductsForm() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -107,7 +108,7 @@ export function ImportProductsForm() {
               <p className="mt-0.5 text-xs text-neutral-500">
                 {fileName
                   ? previewReady ? "CSV checked — ready to import" : "File selected — check before importing"
-                  : "Stockmora or Shopify CSV"}
+                  : `${siteConfig.name} or Shopify CSV`}
               </p>
             </div>
 

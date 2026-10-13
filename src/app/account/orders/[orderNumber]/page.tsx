@@ -21,6 +21,7 @@ import {
   orders,
 } from "@/db/schema";
 import { auth } from "@/lib/auth";
+import { siteConfig } from "@/config/site";
 
 function formatMoney(cents: number) {
   return new Intl.NumberFormat("en-US", {
@@ -403,10 +404,7 @@ export default async function BuyerOrderPage({
               </p>
 
               <p className="mt-1 text-xs leading-5 text-neutral-500">
-                Your order status is
-                updated by the Stockmora
-                team as fulfillment
-                progresses.
+                Your order status is updated by the {siteConfig.name} team as fulfillment progresses.
               </p>
             </div>
           </div>

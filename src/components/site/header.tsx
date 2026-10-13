@@ -23,6 +23,7 @@ import {
 } from "react";
 
 import { StoreNavigation } from "./store-navigation";
+import { CategoryStrip } from "./category-strip";
 
 import { siteConfig } from "@/config/site";
 import { authClient } from "@/lib/auth-client";
@@ -96,6 +97,11 @@ export function Header() {
 
   const [categoryStatus, setCategoryStatus] = useState<"loading" | "ready" | "error">("loading");
   const [categoryAttempt, setCategoryAttempt] = useState(0);
+
+  function retryCategories() {
+    setCategoryStatus("loading");
+    setCategoryAttempt((attempt) => attempt + 1);
+  }
 
   const accountRef =
     useRef<HTMLDivElement | null>(
@@ -314,12 +320,12 @@ export function Header() {
         <div className="relative mx-auto h-[76px] max-w-[1500px]">
         <div className={`store-header-content flex h-full items-center gap-1 px-2 sm:gap-5 sm:px-5 lg:gap-7 lg:px-8 ${mobileSearchOpen ? "invisible opacity-0" : "visible opacity-100"}`} inert={mobileSearchOpen} aria-hidden={mobileSearchOpen || undefined}>
           {/* NAVIGATION MENU */}
-          <StoreNavigation open={navigationOpen} onOpenChange={handleNavigationChange} categories={categories} categoryStatus={categoryStatus} onRetryCategories={() => { setCategoryStatus("loading"); setCategoryAttempt((attempt) => attempt + 1); }} />
+          <StoreNavigation open={navigationOpen} onOpenChange={handleNavigationChange} categories={categories} categoryStatus={categoryStatus} onRetryCategories={retryCategories} />
 
           {/* LOGO */}
           <Link
             href="/"
-            className="min-w-0 truncate text-[22px] max-[360px]:text-[14px] sm:shrink-0 sm:text-[27px] font-semibold tracking-[-0.045em] text-neutral-950"
+            className="min-w-0 text-[15px] leading-tight sm:shrink-0 sm:text-[22px] lg:text-[27px] font-semibold tracking-[-0.045em] text-neutral-950"
           >
             {siteConfig.name}
           </Link>
@@ -841,7 +847,7 @@ export function Header() {
           <button type="button" onClick={closeMobileSearch} aria-label="Close search" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition hover:bg-neutral-100 active:bg-neutral-200"><X size={21} /></button>
         </form>
         </div>
-
+        <CategoryStrip categories={categories} categoryStatus={categoryStatus} onRetryCategories={retryCategories} />
       </header>
     </>
   );

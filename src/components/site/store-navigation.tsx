@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowRight, Grid2X2, House, Menu, X } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { Sheet, SheetClose, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { siteConfig } from "@/config/site";
 
 type Props = {
   open: boolean;
@@ -35,7 +36,7 @@ export function StoreNavigation({ open, onOpenChange, categories, categoryStatus
         overlayClassName="store-sheet-overlay z-[120] bg-[#0f201a]/25 backdrop-blur-sm"
       >
         <SheetHeader className="shrink-0 flex-row items-center justify-between gap-4 border-b border-white/70 p-4 sm:p-5">
-          <SheetTitle className="text-xl font-semibold tracking-tight text-[#17352c]">Browse Stockmora</SheetTitle>
+          <SheetTitle className="text-xl font-semibold tracking-tight text-[#17352c]">Browse {siteConfig.name}</SheetTitle>
           <SheetDescription className="sr-only">Browse wholesale products and categories.</SheetDescription>
           <SheetClose asChild>
             <button type="button" aria-label="Close navigation" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/60 hover:bg-white active:bg-white/80 focus-visible:outline-2 focus-visible:outline-[#17352c]"><X size={21} /></button>

@@ -23,7 +23,7 @@ import {
 import { auth } from "@/lib/auth";
 
 export const metadata: Metadata = {
-  title: "Order Placed | Stockmora",
+  title: "Order Placed",
 };
 
 function formatMoney(cents: number) {

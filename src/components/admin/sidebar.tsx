@@ -20,6 +20,7 @@ import {
 
 import { authClient } from "@/lib/auth-client";
 import { useNavigationDialog } from "@/components/site/use-navigation-dialog";
+import { siteConfig } from "@/config/site";
 
 const navigation = [
   {
@@ -106,7 +107,7 @@ export function AdminSidebar() {
           href="/admin"
           className="text-[23px] font-semibold tracking-[-0.045em] text-neutral-950"
         >
-          Stockmora
+          {siteConfig.name}
         </Link>
 
         <p className="mt-1 text-xs font-medium uppercase tracking-[0.14em] text-neutral-500">
@@ -199,7 +200,7 @@ export function AdminSidebar() {
       </div>
       <header className="sticky top-0 z-40 flex h-16 items-center gap-3 border-b border-neutral-200 bg-white/90 px-4 backdrop-blur-xl xl:hidden">
         <button type="button" onClick={show} aria-label="Open admin navigation" aria-expanded={open} aria-haspopup="dialog" aria-controls="admin-navigation-menu" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-neutral-200 hover:bg-neutral-50 focus-visible:outline-2 focus-visible:outline-[#17352c]"><Menu size={22} /></button>
-        <Link href="/admin" className="text-xl font-semibold tracking-tight">Stockmora <span className="text-xs font-normal text-neutral-500">Admin</span></Link>
+        <Link href="/admin" className="min-w-0 text-lg font-semibold leading-tight tracking-tight sm:text-xl">{siteConfig.name} <span className="text-xs font-normal text-neutral-500">Admin</span></Link>
       </header>
       <dialog ref={dialogRef} id="admin-navigation-menu" className="navigation-dialog admin-menu" aria-label="Admin navigation" onClose={onClose} onClick={(event) => { if (event.target === event.currentTarget) close(); }}>
         <button type="button" onClick={close} aria-label="Close admin navigation" className="absolute right-3 top-4 flex h-11 w-11 items-center justify-center rounded-full hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-[#17352c]"><X size={21} /></button>

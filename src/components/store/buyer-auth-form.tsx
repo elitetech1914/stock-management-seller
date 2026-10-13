@@ -15,6 +15,7 @@ import {
 } from "react";
 
 import { authClient } from "@/lib/auth-client";
+import { siteConfig } from "@/config/site";
 
 type BuyerAuthFormProps = {
   mode: "login" | "register";
@@ -37,7 +38,7 @@ function getSafeRedirect() {
     return "/";
   }
 
-  // Only allow internal Stockmora paths.
+  // Only allow internal application paths.
   if (
     !next.startsWith("/") ||
     next.startsWith("//")
@@ -418,7 +419,7 @@ export default function BuyerAuthForm({
           </p>
         ) : (
           <p className="text-sm text-neutral-500">
-            New to Stockmora?{" "}
+            New to {siteConfig.name}?{" "}
             <Link
               href="/register"
               className="font-semibold text-[#17352c] hover:text-[#102a22]"
