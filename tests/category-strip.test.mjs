@@ -29,6 +29,8 @@ test("empty categories retain All products and accessible scroll buttons", () =>
   assert.match(html, /Scroll categories left/);
   assert.match(html, /Scroll categories right/);
   assert.equal((html.match(/disabled=""/g) ?? []).length, 2);
+  assert.match(html, /lucide-chevron-left/);
+  assert.match(html, /lucide-chevron-right/);
   assert.doesNotMatch(html, /Loading categories|Categories could not load/);
 });
 
@@ -42,17 +44,17 @@ test("category links preserve supplied order, escape names and mark the active r
   assert(html.indexOf('href="/categories/electronics"') < html.indexOf('href="/categories/custom"'));
   assert.match(html, /href="\/categories\/custom" aria-current="page"/);
   assert.match(html, /Special &lt;finds&gt;/);
-  assert.match(html, /lucide-smartphone/);
-  assert.equal((html.match(/lucide-grid-2x2/g) ?? []).length, 2);
+  for (const [, content] of html.matchAll(/<a\b[^>]*>([\s\S]*?)<\/a>/g)) assert.doesNotMatch(content, /<svg/);
   pathname = "/products";
   assert.match(render(), /href="\/products" aria-current="page"/);
   pathname = "/";
 });
 
-test("common category icons and loading/error feedback keep navigation available", () => {
+test("category labels stay text-only and loading/error feedback keeps navigation available", () => {
   const categories = ["Electronics", "Clothing", "Home", "Kitchen", "Beauty", "Sports"].map((name, i) => ({ id: String(i), name, slug: name.toLowerCase() }));
   const html = render(categories);
-  for (const icon of ["smartphone", "shirt", "house", "cooking-pot", "sparkles", "dumbbell"]) assert.match(html, new RegExp("lucide-" + icon));
+  assert.equal((html.match(/<svg\b/g) ?? []).length, 2);
+  for (const { name } of categories) assert.match(html, new RegExp(">" + name + "</a>"));
   assert.match(render([], "loading"), /role="status"[^>]*>Loading categories/);
   const error = render([], "error");
   assert.match(error, /role="alert"/);
