@@ -105,7 +105,11 @@ export function MediaLibrary({ batchId, disabled = false, refreshKey = 0, galler
           <p className="mt-1 text-xs leading-5 text-muted">{asset.width} × {asset.height} · {Math.ceil(asset.sizeBytes / 1024)} KiB · {asset.descriptiveName ? "Manual name" : "Automatic name"}</p>
           {Boolean(asset.usageCount) && <div className="mt-2 text-xs leading-5 text-muted"><p>Used by {asset.usageCount} product(s)</p>{asset.associations?.slice(0, 2).map((link, index) => <Link key={`${link.productId}-${index}`} href={`/admin/products/${link.productId}/edit`} className="block break-words text-brand underline underline-offset-4">{link.title} · {link.sku}</Link>)}</div>}
           {onAddSelected && <label className="mt-2 flex min-h-11 cursor-pointer items-center gap-2 text-sm"><input type="checkbox" disabled={locked || added || asset.deletionPending} checked={Boolean(added) || selected.includes(asset.id)} onChange={() => setSelected((previous) => previous.includes(asset.id) ? previous.filter((id) => id !== asset.id) : [...previous, asset.id])} aria-label={`Select ${asset.originalFilename}`} className="h-4 w-4 shrink-0 accent-brand" />{added ? "Already in gallery" : "Select image"}</label>}
-          <button type="button" disabled={locked || asset.deletionPending} onClick={async () => { try { await navigator.clipboard.writeText(asset.url); setNotice(`Copied image URL for ${asset.originalFilename}.`); } catch { setNotice(`Copy this image URL: ${asset.url}`); } }} className={mediaControl + " mt-3 w-full"}>Copy image URL</button>
+          <button type="button" disabled={locked || asset.deletionPending} onClick={async () => {
+            const imageUrl = new URL(asset.url, window.location.origin).href;
+            try { await navigator.clipboard.writeText(imageUrl); setNotice(`Copied image URL for ${asset.originalFilename}.`); }
+            catch { setNotice(`Copy this image URL: ${imageUrl}`); }
+          }} className={mediaControl + " mt-3 w-full"}>Copy image URL</button>
           <MediaAssetActions asset={asset} disabled={locked} onBusy={mutationBusy} onChanged={() => setVersion((previous) => previous + 1)} onMessage={setNotice} />
         </article>;
       })}</div>
