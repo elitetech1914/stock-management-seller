@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, isNull } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { importBatches, mediaAssets } from "@/db/schema";
 import { validateOriginalFilename } from "./image";
@@ -26,7 +26,7 @@ export async function checkCsvImages(database: Pick<NodePgDatabase, "select">, r
         const names = [...validNames];
         for (let offset = 0; offset < names.length; offset += 500) {
           const matches = await database.select({ id: mediaAssets.id, originalFilename: mediaAssets.originalFilename }).from(mediaAssets)
-            .where(and(eq(mediaAssets.batchId, batchId), inArray(mediaAssets.originalFilename, names.slice(offset, offset + 500))));
+            .where(and(eq(mediaAssets.batchId, batchId), isNull(mediaAssets.deletedAt), inArray(mediaAssets.originalFilename, names.slice(offset, offset + 500))));
           for (const asset of matches) assets.set(asset.originalFilename, asset);
         }
         for (const reference of references) {

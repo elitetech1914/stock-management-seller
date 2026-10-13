@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 
 import { db } from "@/db";
 import { importBatches, mediaAssets } from "@/db/schema";
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     const [batch] = await db.select({ id: importBatches.id }).from(importBatches).where(eq(importBatches.id, batchId)).limit(1);
     if (!batch) throw new MediaRequestError("This import batch does not exist.", 404);
     const [existing] = await db.select({ id: mediaAssets.id }).from(mediaAssets)
-      .where(and(eq(mediaAssets.batchId, batchId), eq(mediaAssets.originalFilename, filename))).limit(1);
+      .where(and(eq(mediaAssets.batchId, batchId), eq(mediaAssets.originalFilename, filename), isNull(mediaAssets.storageDeletedAt))).limit(1);
     if (existing) throw new MediaRequestError("This filename already exists in this batch. Use another batch for a different image.", 409);
     assertStorageConfigured();
     const input = await readBoundedBody(request);

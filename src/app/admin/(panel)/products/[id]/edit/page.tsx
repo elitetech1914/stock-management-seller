@@ -15,6 +15,7 @@ import {
 } from "@/db/schema";
 
 import { updateProduct } from "../../actions";
+import { managedMediaId } from "@/lib/media/shared";
 
 function centsToMoney(cents: number) {
   return (cents / 100).toFixed(2);
@@ -274,7 +275,7 @@ export default async function EditProductPage({
           </section>
 
           {/* IMAGES */}
-          <ProductImageEditor initialImages={images.map((image) => ({ reference: { imageId: image.id }, url: image.url, altText: image.altText }))} />
+          <ProductImageEditor initialImages={images.map((image) => ({ reference: { imageId: image.id }, url: image.url, altText: image.altText, mediaAssetId: image.mediaAssetId || managedMediaId(image.url, process.env.BETTER_AUTH_URL) }))} />
         </div>
 
         {/* RIGHT COLUMN */}

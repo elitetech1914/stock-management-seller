@@ -1,7 +1,7 @@
 import { MAX_UPLOAD_SELECTION, UUID_PATTERN } from "./shared";
 
 export type GalleryReference = { imageId: string; assetId?: never } | { assetId: string; imageId?: never };
-export type ProductGalleryItem = { reference: GalleryReference; url: string; altText: string | null };
+export type ProductGalleryItem = { reference: GalleryReference; url: string; altText: string | null; mediaAssetId?: string | null };
 export type ProductEditState = { error: string | null };
 
 export class ProductGalleryError extends Error {}
@@ -25,11 +25,16 @@ export function galleryIdentity(url: string) {
   return id && UUID_PATTERN.test(id) ? `asset:${id.toLowerCase()}` : `url:${url}`;
 }
 
+export function galleryItemIdentity(item: ProductGalleryItem) {
+  const id = item.reference.assetId || item.mediaAssetId;
+  return id ? `asset:${id.toLowerCase()}` : galleryIdentity(item.url);
+}
+
 export function appendGalleryAssets(current: ProductGalleryItem[], assets: { id: string; url: string }[]) {
-  const seen = new Set(current.map((item) => galleryIdentity(item.url)));
+  const seen = new Set(current.map(galleryItemIdentity));
   const next = [...current];
   for (const asset of assets) {
-    const identity = galleryIdentity(asset.url);
+    const identity = `asset:${asset.id.toLowerCase()}`;
     if (!seen.has(identity) && next.length < MAX_UPLOAD_SELECTION) {
       seen.add(identity); next.push({ reference: { assetId: asset.id }, url: asset.url, altText: null });
     }

@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 
 import { db } from "@/db";
 import { mediaAssets } from "@/db/schema";
@@ -14,7 +14,7 @@ async function serve(request: Request, context: { params: Promise<{ id: string; 
     return new Response(null, { status: 404 });
   }
   try {
-    const [asset] = await db.select().from(mediaAssets).where(eq(mediaAssets.id, id)).limit(1);
+    const [asset] = await db.select().from(mediaAssets).where(and(eq(mediaAssets.id, id), isNull(mediaAssets.deletedAt))).limit(1);
     if (!asset) return new Response(null, { status: 404 });
     const etag = `"${asset.id}"`;
     const headers = {

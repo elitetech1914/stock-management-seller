@@ -11,7 +11,7 @@
 
 Original filenames are preserved exactly, including case and Unicode. A database constraint rejects duplicate filenames within a batch rather than permitting ambiguous matches. Another batch can contain the same filename. Uploaded assets are independent of products and survive changes to product titles. Only successfully stored uploads enter `media_assets`; upload failures remain in the current browser list and can be retried.
 
-Uploading alone does not assign images to products. CSV filename matching, preview reports and the edit-product gallery with ordering/primary/removal controls are implemented. Library deletion, product-derived SEO filenames and explicit gallery alt-text editing remain subsequent milestones. Imported/newly attached images use the product title as default alt text; existing gallery alt text is preserved.
+Uploading alone does not assign images to products. CSV filename matching, preview reports and the edit-product gallery with ordering/primary/removal controls are implemented. Library search, guarded deletion, manual rename and descriptive filenames for new attachments are implemented. Explicit gallery alt-text editing remains a subsequent milestone. Imported/newly attached images use the product title as default alt text; existing gallery alt text is preserved.
 
 ## Edit-product gallery
 
@@ -20,9 +20,9 @@ Uploading alone does not assign images to products. CSV filename matching, previ
 - **Upload from computer** accepts file selection and drag-and-drop. Click Upload to process two files at a time using the same transport, validation, WebP conversion, progress and retry behavior as Bulk Images. Successful uploads append in original file-selection order, independent of completion order. Up to 500 images can be attached to a product.
 - Remove, move earlier/later, or make primary using keyboard-accessible buttons. The first gallery entry is primary. Removing an attachment does not delete the underlying asset or object.
 - Queued, active and failed uploads block product saving until uploaded, retried or removed. Batch/library loading failures do not prevent saving a gallery made only of existing product images. After upload timeouts, refresh the library before retrying because the server may have saved the image already.
-- Save submits ordered `{imageId}` or `{assetId}` references, never new arbitrary URLs or file bytes. The action verifies admin access and product existence, validates reference IDs, ensures existing images belong to this product, and confirms uploaded assets still exist. It deduplicates immutable media identities and saves all product fields and gallery rows in one transaction. New attachments use the current product title for alt text; existing alt text, including null values, is preserved.
+- Save submits ordered `{imageId}` or `{assetId}` references, never new arbitrary URLs or file bytes. The action verifies admin access and product existence, validates reference IDs, ensures existing images belong to this product, and confirms uploaded assets still exist. It prevents duplicate new attachments and saves fields and gallery changes in one transaction. Existing gallery rows, including duplicate legacy image rows, are retained. Ordinary saves preserve image IDs, URLs, positions, primary selection, alt text and creation time while establishing verified NULL media references. Appends follow the largest retained position; explicit reorder changes positions, and explicit removal deletes only selected attachments. New attachments use the current product title for alt text; existing alt text, including null values, is preserved.
 - Inline save failures retain product fields and gallery edits for retry. Success redirects to the product list and refreshes admin/catalog/category/product pages. Discarding the editor leaves the published gallery unchanged; completed uploads remain in their selected batch.
-- No new tables or migration are introduced by the visual editor. Uploaded assets and filename matching still require the existing media migration and runtime storage configuration.
+- The visual editor uses the existing media foundation; media management additionally requires the schema-only 0002 migration. Uploads require the existing runtime storage configuration.
 
 ## Exact CSV columns and import checks
 
@@ -42,7 +42,25 @@ Headers are case-insensitive and spaces/punctuation normalize to underscores. Or
 
 Within each product, numbered images are ordered by `image_1` through `image_5`, skipping empty slots and duplicate URLs. The first supplied image is primary. Existing URL images follow numbered filenames if both are supplied; URL-only files retain their existing `image_position` ordering. Nonempty supplied galleries replace the old gallery in a transaction; no image references leave existing galleries unchanged. Product/category/variant writes retain the existing importer behavior, so runtime failures can still result in a partially completed catalog import, reported in the result. A filename-validation failure causes no catalog writes.
 
-The media route already permits descriptive URL filenames such as `/media/<asset UUID>/stainless-steel-travel-mug-1.webp`, so later product association improvements can generate SEO names without moving objects or discarding supplier filenames.
+New product attachments generate descriptive URL filenames such as `/media/<asset UUID>/stainless-steel-travel-mug-1.webp`, without moving objects or changing supplier filenames. Gallery order supplies the 1-based suffix, including external images in that order. A shared asset can have a different automatic title-based filename on each product. New variant-only images use the product title and variant SKU; a variant image also in the gallery uses its gallery filename. Existing URLs remain unchanged on ordinary product saves and title changes. Explicit Rename regenerates names using the current gallery order.
+
+## Image names, search and deletion
+
+Bulk Images and the Edit product library share search and image controls. Search the selected batch, or select **Search all batches**, by original filename, descriptive image name, associated product title, parent SKU or variant SKU. Matching covers the full library; pages load 100 images at a time with a stable timestamp/UUID cursor.
+
+**Rename** changes the descriptive base name globally for every product using the asset. Gallery numbering stays specific to each product. **Use automatic name** restores title-based naming. Original uploaded filenames and storage keys never change, so CSV matching still uses the exact original filename, including case and extension. Existing public URL aliases keep working after a rename, title change or reorder. No visual identification or AI image recognition is performed.
+
+**Delete** permanently removes an unreferenced file from object storage. The server blocks deletion while any product gallery or variant uses it, including inactive products and recognized legacy same-origin URLs. Remove all associations and save the products first. A failed storage deletion remains pending and retryable in the library; pending images cannot be attached or served. Completed deletion hides the asset from the library but retains its original filename, UUID and storage key in an archive record. A fresh upload may then reuse the original filename in the same batch. Files already cached in a browser can remain cached until expiry.
+
+Rename and Delete are immediate library operations, separate from **Save changes**. Discarding a product edit does not undo a library rename or deletion. Unsaved product galleries retain their edits and validate asset availability again when saved.
+
+### Media management migration
+
+The schema-only `drizzle/0002_media_management.sql` adds descriptive names, deletion status and nullable media references, with restrictive foreign keys and indexes. It does not backfill references, rewrite URLs, normalize positions, change primary selections or alt text, or access storage.
+
+Production's 0001 foundation is already applied and recorded. Use the [two-stage deployment instructions](media-management-deployment.md): publish the migration-tooling commit first, verify the deployed runtime, take a backup, preview and manually apply only 0002, verify readiness, then publish the feature commit. The command stops when prerequisites or schema/history do not match; it never replays 0001. Do not run migrations during build/start or use general db:migrate/db:push for this rollout.
+
+Relative media URLs and absolute URLs on `BETTER_AUTH_URL` work before explicit references are populated. Search and deletion checks recognize these legacy associations; old public aliases keep working. Ordinary product saves establish verified reference fields without rewriting existing images. Supported legacy URLs need no backfill for display or image management. Unsupported references require a separately reviewed mapping; any future reference-only backfill must preview changes and preserve existing URLs, positions and alt text. No automatic backfill is included.
 
 ## Storage, limits and delivery
 
@@ -57,46 +75,19 @@ The media route already permits descriptive URL filenames such as `/media/<asset
 - The final URL segment is a descriptive presentation filename; UUIDs determine uniqueness. Existing `imageUrl` fields, storefront galleries and cart URLs accept these same-origin relative URLs. No dedicated media domain is required. Garage's ports and S3 credentials remain private.
 - Failed/queued upload lists are browser state and are cleared on reload or batch change. Successfully uploaded images persist in the batch library. A timeout or dropped response might happen after the server saved an image: refresh the library before retrying. A duplicate response cannot replace the stored image.
 
-## Migration: prepare before using uploads
+## Existing migration foundation
 
-Generated migration: `drizzle/0001_media_upload_foundation.sql`, with its Drizzle snapshot and journal entry. It creates only `import_batches`, `media_assets`, their foreign key, unique constraints and indexes. No existing commerce or Better Auth tables are changed. Do not put migration commands into the Coolify build command.
+`0001_media_upload_foundation` created the independent batch and asset tables. Its SQL, snapshot and recorded history remain unchanged. It is already applied and recorded in production; do not rerun it for the media-management rollout. `0000` and `0001` files are retained for read-only dependency/history validation.
 
-The repository's initial migration `0000_lyrical_wolf_cub` came with the first commit. The source history does **not** establish whether production ran `db:migrate` or `db:push`. Running all migrations against a populated but unjournaled database would attempt to recreate commerce tables.
+The schema-only 0002 rollout is documented in [media-management-deployment.md](media-management-deployment.md). The command defaults to preview; `--check` returns success only when the reviewed management schema is ready. Schema changes and the 0002 history record are transactional. No production migration, baseline operation, storage deletion, push or deployment has been executed from this workspace.
 
-On the intended database, check its history with this read-only command first:
-
-```sh
-npm run db:media-status
-```
-
-It reads table existence and checks exact migration hashes/timestamps without displaying database credentials or applying SQL. It does not perform a full schema drift audit.
-
-For a deployed store whose media tables are missing, preview the targeted migration:
-
-```sh
-npm run db:media-migrate
-```
-
-After taking a database backup and reviewing `0001_media_upload_foundation.sql`, apply only that migration in the **Stockmora application terminal** in Coolify:
-
-```sh
-npm run db:media-migrate -- --apply
-npm run db:media-status
-```
-
-The targeted command defaults to a read-only preview and requires `--apply` to write. It uses runtime PostgreSQL credentials and production dependencies; Drizzle Kit is not required in the running container. It creates only the two media tables, their constraints and indexes in one transaction, using a migration lock and SQL scope checks. It stops on partial media tables, missing commerce tables or unexpected migration history. If both media tables already exist, it does not replay their creation.
-
-When the initial migration is recorded correctly, the command also records the media migration in the existing Drizzle journal in that transaction. When commerce exists with an empty or absent journal (such as a previous `db:push` setup), it can still add these independent media tables safely; it leaves the legacy journal unchanged rather than pretending to have verified/applied the commerce baseline. This selective application is intentionally separate from the general migration runner.
-
-Before subsequently using general `db:migrate` on an unjournaled store, compare its commerce columns, types, defaults, foreign keys, unique constraints and indexes against the initial migration/snapshot, establish that baseline as a separately reviewed operation, and record the already-applied media migration after verifying its schema. Do not run `db:migrate` blindly: it would try to recreate existing tables. For **STOP**, partial tables or mismatched hashes, inspect the discrepancy before proceeding. No production migration or baseline operation has been executed from this workspace.
-
-On a **fresh dedicated development database**, the normal migration command can create commerce and media tables. Better Auth initialization remains separate and follows the existing project's setup. Never use production as the disposable local test database.
+Fresh dedicated development databases may use the normal initialization workflow; production must use the targeted reviewed rollout. Better Auth initialization remains separate. Never use production as a disposable test database.
 
 ## Coolify requirements
 
 Keep the existing Railpack deployment, build `npm run build`, start `npm run start`, bucket, private Docker networking and six runtime S3 variables. Keep `BETTER_AUTH_URL` equal to the application's public origin so cookie authentication and mutation origin checks agree. No new environment variables, public Garage ports, domains or other Coolify services are needed. Install the normal production dependencies including Sharp's platform binaries; do not omit optional dependencies during installation.
 
-Apply the reviewed migration separately before using Bulk Images. Without the media tables, the admin APIs report a specific missing-table error. Opening the tab lists database batches and does not access Garage, so an initial batch-list error should be diagnosed against the database first. Uploading additionally requires the runtime storage configuration. Existing commerce pages continue using their existing tables.
+Apply schema-only 0002 separately between the two deployment stages before enabling Rename/Delete/Search. Without the media tables, the admin APIs report a specific missing-table error. Opening the tab lists database batches and does not access Garage, so an initial batch-list error should be diagnosed against the database first. Uploading additionally requires the runtime storage configuration. Existing commerce pages continue using their existing tables.
 
 ## Local verification
 
@@ -107,6 +98,8 @@ npm ci
 npm run test:media
 npm run test:csv-images
 npm run test:product-gallery
+npm run test:media-management-migration
+npm run test:media-management
 npx tsc --noEmit
 npm run db:check
 npm run lint
@@ -117,7 +110,7 @@ For an interactive upload test, configure the existing authentication/database v
 
 ```sh
 npm run db:media-status
-# Only when this is a fresh development DB or the status permits the pending migration:
+# Only on a fresh dedicated development database:
 npm run db:migrate
 npm run dev
 ```

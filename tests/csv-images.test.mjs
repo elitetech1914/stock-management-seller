@@ -70,7 +70,8 @@ test("CSV import preview and image association use real SQL in isolated temporar
     const before = await publicCounts();
     for (const table of ["categories", "products", "product_images", "product_variants"]) await client.query(`CREATE TEMP TABLE ${table} (LIKE public.${table} INCLUDING ALL)`);
     await client.query("CREATE TEMP TABLE import_batches (id uuid PRIMARY KEY, name varchar(150) NOT NULL, created_at timestamptz DEFAULT now() NOT NULL)");
-    await client.query("CREATE TEMP TABLE media_assets (id uuid PRIMARY KEY, batch_id uuid NOT NULL REFERENCES import_batches(id), original_filename varchar(255) NOT NULL, UNIQUE(batch_id,original_filename))");
+    for (const table of ["product_images", "product_variants"]) await client.query("ALTER TABLE " + table + " ADD COLUMN IF NOT EXISTS media_asset_id uuid");
+    await client.query("CREATE TEMP TABLE media_assets (id uuid PRIMARY KEY, batch_id uuid NOT NULL REFERENCES import_batches(id), original_filename varchar(255) NOT NULL, descriptive_name varchar(255),deleted_at timestamptz,storage_deleted_at timestamptz, UNIQUE(batch_id,original_filename))");
     await client.query("INSERT INTO import_batches(id,name) VALUES ($1,'Supplier A'),($2,'Supplier B')", [batchA, batchB]);
     await client.query("INSERT INTO media_assets(id,batch_id,original_filename) VALUES ($1,$2,'front.JPG'),($3,$2,'back.png'),('55555555-5555-4555-8555-555555555555',$4,'front.JPG'),('66666666-6666-4666-8666-666666666666',$2,'Tasse-é.png')", [assetA, batchA, assetB, batchB]);
     const database = drizzle(client);
@@ -132,7 +133,9 @@ test("CSV import preview and image association use real SQL in isolated temporar
       assert.equal((await counts()).images, "2");
       const beforeImages = (await client.query("SELECT url,position FROM product_images ORDER BY position")).rows;
       const blank = await importProducts(initialImportState, form("sku,title,image_1,image_2\nMUG-1,Renamed Mug,,", "import", ""));
-      assert(blank.success); assert.deepEqual((await client.query("SELECT url,position FROM product_images ORDER BY position")).rows, beforeImages);
+      assert(blank.success);
+      const renamed = (await client.query("SELECT url,position FROM product_images ORDER BY position")).rows;
+      assert.deepEqual(renamed, beforeImages);
     });
 
     await t.test("Shopify URL headers/continuation rows, positions and variant images retain their behavior", async () => {

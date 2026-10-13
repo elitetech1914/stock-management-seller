@@ -23,6 +23,8 @@ import { slugify } from "@/lib/slugify";
 import { checkCsvImages } from "@/lib/media/csv-import";
 import { CSV_IMAGE_COLUMNS, getCsvProductImages, type CsvImageAsset, type CsvImageRow } from "@/lib/media/csv-images";
 import { mediaErrorResponse } from "@/lib/media/admin";
+import { establishProductMediaAssociations, lockProductMedia, nameGalleryImages, nameVariantImage } from "@/lib/media/associations";
+import { managedMediaId } from "@/lib/media/shared";
 
 import type { ImportState } from "./import-state";
 
@@ -915,13 +917,11 @@ export async function importProducts(
         productImageRows.length > 0
       ) {
         await db.transaction(async (tx) => {
+          await tx.select({ id: products.id }).from(products).where(eq(products.id, productId)).for("update");
+          await lockProductMedia(tx, productId, productImageRows.map((image) => managedMediaId(image.url, process.env.BETTER_AUTH_URL)));
+          const named = await nameGalleryImages(tx, productImageRows.map((image) => ({ ...image, altText: image.altText || title })), title);
           await tx.delete(productImages).where(eq(productImages.productId, productId));
-          await tx.insert(productImages).values(productImageRows.map((image, index) => ({
-            productId,
-            url: image.url,
-            altText: image.altText || title,
-            position: image.position ?? index,
-          })));
+          await tx.insert(productImages).values(named.map((image) => ({ ...image, productId })));
         });
       }
 
@@ -1018,34 +1018,43 @@ export async function importProducts(
             new Date(),
         };
 
-        if (existingVariant) {
-          await db
-            .update(
-              productVariants
-            )
-            .set(
-              variantValues
-            )
-            .where(
-              eq(
-                productVariants.id,
-                existingVariant.id
+        await db.transaction(async (tx) => {
+          await tx.select({ id: products.id }).from(products).where(eq(products.id, productId)).for("update");
+          await lockProductMedia(tx, productId, [managedMediaId(variantValues.imageUrl, process.env.BETTER_AUTH_URL)]);
+          const named = await nameVariantImage(tx, variantValues.imageUrl, title, variantSku, productId);
+          if (existingVariant) {
+            await tx
+              .update(
+                productVariants
               )
-            );
+              .set(
+                { ...variantValues, ...named }
+              )
+              .where(
+                eq(
+                  productVariants.id,
+                  existingVariant.id
+                )
+              );
 
-          variantsUpdated++;
-        } else {
-          await db
-            .insert(
-              productVariants
-            )
-            .values(
-              variantValues
-            );
+            variantsUpdated++;
+          } else {
+            await tx
+              .insert(
+                productVariants
+              )
+              .values(
+                { ...variantValues, ...named }
+              );
 
-          variantsCreated++;
-        }
+            variantsCreated++;
+          }
+        });
       }
+      await db.transaction(async (tx) => {
+        await tx.select({ id: products.id }).from(products).where(eq(products.id, productId)).for("update");
+        await establishProductMediaAssociations(tx, productId);
+      });
     } catch (error) {
       failed++;
 

@@ -15,8 +15,9 @@ import { slugify } from "@/lib/slugify";
 import { AdminProductInputError, parseBulkProductRequest, type BulkProductState } from "@/lib/admin-product-filters";
 import { applyBulkProductUpdate } from "@/lib/admin-products";
 import { parseProductGallery, ProductGalleryError, type ProductEditState } from "@/lib/media/product-gallery";
-import { resolveProductGallery } from "@/lib/media/product-gallery-server";
+import { applyProductGallery, resolveProductGallery } from "@/lib/media/product-gallery-server";
 import { UUID_PATTERN } from "@/lib/media/shared";
+import { establishProductMediaAssociations, nameGalleryImages } from "@/lib/media/associations";
 
 async function requireAdmin() {
   const session = await auth.api.getSession({
@@ -100,45 +101,6 @@ export async function createProduct(
 
   const slug = slugify(`${title}-${sku}`);
 
-  const [product] = await db
-    .insert(products)
-    .values({
-      title,
-      slug,
-      sku,
-
-      description:
-        description.length > 0
-          ? description
-          : null,
-
-      brand:
-        brand.length > 0
-          ? brand
-          : null,
-
-      categoryId,
-
-      costPriceCents: moneyToCents(
-        formData.get("costPrice")
-      ),
-
-      wholesalePriceCents: moneyToCents(
-        formData.get("wholesalePrice")
-      ),
-
-      retailPriceCents: moneyToCents(
-        formData.get("retailPrice")
-      ),
-
-      stockQuantity,
-      minimumOrderQuantity,
-      caseQuantity,
-
-      isActive: true,
-    })
-    .returning();
-
   const imageUrls = String(
     formData.get("imageUrls") ?? ""
   )
@@ -146,16 +108,17 @@ export async function createProduct(
     .map((url) => url.trim())
     .filter(Boolean);
 
-  if (imageUrls.length > 0) {
-    await db.insert(productImages).values(
-      imageUrls.map((url, index) => ({
-        productId: product.id,
-        url,
-        altText: title,
-        position: index,
-      }))
-    );
-  }
+  await db.transaction(async (tx) => {
+    const images = await nameGalleryImages(tx, imageUrls.map((url, index) => ({ url, altText: title, position: index })), title);
+    const [product] = await tx.insert(products).values({
+      title, slug, sku, description: description || null, brand: brand || null, categoryId,
+      costPriceCents: moneyToCents(formData.get("costPrice")),
+      wholesalePriceCents: moneyToCents(formData.get("wholesalePrice")),
+      retailPriceCents: moneyToCents(formData.get("retailPrice")),
+      stockQuantity, minimumOrderQuantity, caseQuantity, isActive: true,
+    }).returning();
+    if (images.length) await tx.insert(productImages).values(images.map((image) => ({ ...image, productId: product.id })));
+  });
 
   revalidatePath("/admin/products");
   revalidatePath("/");
@@ -194,8 +157,8 @@ export async function updateProduct(id: string, previous: ProductEditState, form
         caseQuantity: Math.max(1, Number(formData.get("caseQuantity")) || 1),
         isActive: formData.get("isActive") === "on", updatedAt: new Date(),
       }).where(eq(products.id, id));
-      await tx.delete(productImages).where(eq(productImages.productId, id));
-      if (images.length) await tx.insert(productImages).values(images.map((image) => ({ ...image, productId: id })));
+      await applyProductGallery(tx, id, images);
+      await establishProductMediaAssociations(tx, id);
     });
   } catch (error) {
     return { error: error instanceof ProductGalleryError ? error.message : "Could not save the product. Check your admin access and product details, then try again." };

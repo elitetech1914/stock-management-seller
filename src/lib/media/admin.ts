@@ -32,6 +32,10 @@ export function mediaErrorResponse(error: unknown) {
       message = "Bulk Images database tables are missing. Apply the media database migration, then reload this page.";
       break;
     }
+    if (value.code === "42703" && typeof value.message === "string" && /\b(descriptive_name|deleted_at|storage_deleted_at|media_asset_id)\b/.test(value.message)) {
+      message = "The media management database update is missing. Apply the media management migration, then reload this page.";
+      break;
+    }
     cause = value.cause;
   }
   return Response.json({ error: message }, {

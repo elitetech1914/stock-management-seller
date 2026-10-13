@@ -56,6 +56,9 @@ test("gallery payload accepts IDs only, bounds selection and recognizes immutabl
   const appended = appendGalleryAssets(current, [{ id: assetId, url: "/media/" + assetId + "/new-name.webp" }, { id: otherId, url: "/media/" + otherId + "/other.webp" }]);
   assert.equal(appended.length, 2); assert.equal(appended[0].altText, "Existing alt"); assert.equal(appended[1].reference.assetId, otherId);
   assert.notEqual(galleryIdentity("https://example.invalid/media/" + assetId + "/image.webp"), galleryIdentity(current[0].url));
+  const legacy = [{ ...current[0], url: `https://shop.invalid/media/${assetId}/original.webp`, mediaAssetId: assetId }];
+  assert.equal(appendGalleryAssets(legacy, [{ id: assetId, url: `/media/${assetId}/renamed.webp` }]).length, 1);
+  assert.equal(appendGalleryAssets(current, [{ id: assetId, url: `https://shop.invalid/media/${assetId}/original.webp` }]).length, 1);
 });
 
 test("shared upload transport validates files and sends raw bytes with filename, progress and useful failures", async () => {
@@ -99,14 +102,15 @@ test("product gallery saves validate ownership and roll back all edits on real t
     const publicCounts = async () => (await client.query("SELECT (SELECT count(*) FROM public.products) AS products, (SELECT count(*) FROM public.product_images) AS images")).rows[0];
     const before = await publicCounts();
     for (const table of ["categories", "products", "product_images", "product_variants"]) await client.query("CREATE TEMP TABLE " + table + " (LIKE public." + table + " INCLUDING ALL)");
-    await client.query("CREATE TEMP TABLE media_assets (id uuid PRIMARY KEY,original_filename varchar(255) NOT NULL)");
+    for (const table of ["product_images", "product_variants"]) await client.query("ALTER TABLE " + table + " ADD COLUMN IF NOT EXISTS media_asset_id uuid");
+    await client.query("CREATE TEMP TABLE media_assets (id uuid PRIMARY KEY,original_filename varchar(255) NOT NULL,descriptive_name varchar(255),deleted_at timestamptz,storage_deleted_at timestamptz)");
     await client.query("INSERT INTO products(id,title,slug,sku) VALUES ($1,'Original product','original','ORIGINAL'),($2,'Other product','other','OTHER')", [productId, otherId]);
     await client.query("INSERT INTO product_images(id,product_id,url,alt_text,position) VALUES ($1,$2,'https://example.invalid/external.jpg','Keep this custom alt',0),($3,$4,'https://example.invalid/other.jpg','Other alt',0)", [existingId, productId, otherImageId, otherId]);
     await client.query("INSERT INTO media_assets(id,original_filename) VALUES ($1,'front.JPG')", [assetId]);
     const database = drizzle(client);
     let session = { user: { role: "admin" } };
     const invalidated = [];
-    const { updateProduct } = loadSource("src/app/admin/(panel)/products/actions.ts", {
+    const { updateProduct, createProduct } = loadSource("src/app/admin/(panel)/products/actions.ts", {
       "@/db": { db: database }, "@/lib/auth": { auth: { api: { getSession: async () => session } } },
       "next/headers": { headers: async () => new Headers() },
       "next/cache": { revalidatePath: (...args) => invalidated.push(args) },
@@ -167,12 +171,23 @@ test("product gallery saves validate ownership and roll back all edits on real t
       assert(invalidated.some(([path,type])=>path==="/products/[slug]"&&type==="page")); assert(invalidated.some(([path,type])=>path==="/categories/[slug]"&&type==="page"));
     });
 
+    await t.test("legacy absolute same-origin images cannot be added a second time from the library", async () => {
+      const origin = process.env.BETTER_AUTH_URL;
+      process.env.BETTER_AUTH_URL ||= "http://localhost:3000";
+      try {
+        const images = (await client.query("SELECT id,url FROM product_images WHERE product_id=$1 ORDER BY position",[productId])).rows;
+        await client.query("UPDATE product_images SET url=$1,media_asset_id=NULL WHERE id=$2",[`${new URL(process.env.BETTER_AUTH_URL).origin}/media/${assetId}/original.webp`, images[0].id]);
+        await save(form([{imageId:images[0].id},{assetId},{imageId:images[1].id}]));
+        assert.equal((await client.query("SELECT count(*) FROM product_images WHERE product_id=$1",[productId])).rows[0].count,"2");
+      } finally { if (origin === undefined) delete process.env.BETTER_AUTH_URL; else process.env.BETTER_AUTH_URL = origin; }
+    });
+
     await t.test("missing assets after selection and database write failures preserve all product fields and gallery rows", async () => {
       const original = await snapshot();
       const removed = await updateProduct(productId,{error:null},form([{assetId:otherId}],"Must not save")); assert(removed.error); assert.deepEqual(await snapshot(),original);
       const references = (await client.query("SELECT id FROM product_images WHERE product_id=$1 ORDER BY position",[productId])).rows.map(image=>({imageId:image.id}));
       await client.query("ALTER TABLE product_images ADD CONSTRAINT fail_gallery_test CHECK (url <> 'https://example.invalid/external.jpg') NOT VALID");
-      const failed = await updateProduct(productId,{error:null},form(references,"Rollback title")); assert(failed.error); assert.deepEqual(await snapshot(),original);
+      const failed = await updateProduct(productId,{error:null},form([...references].reverse(),"Rollback title")); assert(failed.error); assert.deepEqual(await snapshot(),original);
       await client.query("ALTER TABLE product_images DROP CONSTRAINT fail_gallery_test");
       const duplicateSku = await updateProduct(productId,{error:null},form(references,"Bad SKU","OTHER")); assert(duplicateSku.error); assert.deepEqual(await snapshot(),original);
     });
@@ -183,6 +198,58 @@ test("product gallery saves validate ownership and roll back all edits on real t
       assert.equal((await client.query("SELECT count(*) AS count FROM product_images WHERE product_id=$1",[productId])).rows[0].count,"1");
       await save(form([])); assert.equal((await client.query("SELECT count(*) AS count FROM product_images WHERE product_id=$1",[productId])).rows[0].count,"0");
       assert.equal((await client.query("SELECT count(*) AS count FROM media_assets WHERE id=$1",[assetId])).rows[0].count,"1");
+    });
+
+    await t.test("Add product keeps its existing URL input and names registered images atomically", async () => {
+      const data = form([], "Created mug", "CREATED-MUG");
+      data.set("imageUrls", `https://example.invalid/front.jpg\n/media/${assetId}/old-name.webp`);
+      await assert.rejects(createProduct(data), (error) => error.href === "/admin/products");
+      const images = (await client.query("SELECT i.url,i.alt_text,i.position,i.media_asset_id FROM product_images i JOIN products p ON p.id=i.product_id WHERE p.sku='CREATED-MUG' ORDER BY i.position")).rows;
+      assert.equal(images[0].url, "https://example.invalid/front.jpg");
+      assert.equal(images[1].url, `/media/${assetId}/created-mug-2.webp`); assert.equal(images[1].media_asset_id, assetId);
+      assert.equal(images[1].alt_text, "Created mug");
+      const bad = form([], "Must roll back", "MISSING-ASSET"); bad.set("imageUrls", `/media/${otherId}/missing.webp`);
+      await assert.rejects(createProduct(bad), /missing or being deleted/);
+      assert.equal((await client.query("SELECT count(*) FROM products WHERE sku='MISSING-ASSET'")).rows[0].count, "0");
+    });
+
+    await t.test("legacy galleries retain row IDs, duplicate images, sparse/tied positions, primary selection and all alt text across ordinary saves", async () => {
+      const legacyId = "77777777-7777-4777-8777-777777777777", newAsset = "88888888-8888-4888-8888-888888888888";
+      const origin = process.env.BETTER_AUTH_URL;
+      process.env.BETTER_AUTH_URL ||= "http://localhost:3000";
+      try {
+        await client.query("INSERT INTO products(id,title,slug,sku) VALUES($1,'Legacy title','legacy-title','LEGACY-PRESERVE')",[legacyId]);
+        await client.query("INSERT INTO product_images(product_id,url,alt_text,position) VALUES($1,'https://external.invalid/old.jpg','External caption',3),($1,$2,NULL,8),($1,$2,'Keep duplicate caption',8),($1,$3,'Absolute caption',17)",[legacyId,`/media/${assetId}/supplier-filename.webp`,`${new URL(process.env.BETTER_AUTH_URL).origin}/media/${assetId}/supplier-filename.webp`]);
+        await client.query("INSERT INTO product_variants(product_id,sku,image_url) VALUES($1,'LEGACY-VARIANT',$2)",[legacyId,`/media/${assetId}/variant-original.webp`]);
+        const rows = async () => (await client.query("SELECT * FROM product_images WHERE product_id=$1 ORDER BY position,id",[legacyId])).rows;
+        const visibleFields = (images) => images.map((image)=>{const copy={...image};delete copy.media_asset_id;return copy;});
+        const original = await rows(), originalVariant=(await client.query("SELECT * FROM product_variants WHERE product_id=$1",[legacyId])).rows[0];
+        const references=original.map((image)=>({imageId:image.id}));
+        const legacySave = async (gallery,title="Changed legacy title")=>assert.rejects(updateProduct(legacyId,{error:null},form(gallery,title,"LEGACY-PRESERVE")),(error)=>error.href==="/admin/products");
+        const Page = loadSource("src/app/admin/(panel)/products/[id]/edit/page.tsx",{
+          "@/db":{db:database},"../../actions":{updateProduct},"next/link":{__esModule:true,default:()=>null},"next/navigation":{notFound:()=>{throw new Error("NOT_FOUND");}},
+        }).default;
+        const html=renderToStaticMarkup(await Page({params:Promise.resolve({id:legacyId})}));
+        const galleryMarkup=html.split('<ol aria-label="Product gallery"')[1].split('</ol>')[0];
+        assert.equal((galleryMarkup.match(/<li\b/g)??[]).length,4); // Duplicate asset rows must remain visible.
+        await legacySave(references);
+        await legacySave(references,"Second unrelated title change"); // Existing IDs remain valid.
+        assert.deepEqual(visibleFields(await rows()),visibleFields(original));
+        assert.deepEqual((await rows()).map((image)=>image.media_asset_id),[null,assetId,assetId,assetId]);
+        const variant=(await client.query("SELECT * FROM product_variants WHERE product_id=$1",[legacyId])).rows[0];
+        assert.equal(variant.image_url,originalVariant.image_url);assert.equal(variant.id,originalVariant.id);assert.equal(variant.media_asset_id,assetId);
+        await client.query("INSERT INTO media_assets(id,original_filename) VALUES($1,'New.JPG')",[newAsset]);
+        await legacySave([...references,{assetId:newAsset}]);
+        const appended=await rows();
+        assert.deepEqual(visibleFields(appended.slice(0,4)),visibleFields(original));assert.equal(appended[4].position,18);assert.equal(appended[4].url,`/media/${newAsset}/changed-legacy-title-5.webp`);
+        const reordered=[references[2],references[0],references[1],references[3],{imageId:appended[4].id}];
+        await legacySave(reordered);
+        const moved=await rows();assert.equal(moved[0].id,original[2].id);assert.deepEqual(moved.map((image)=>image.position),[0,1,2,3,4]);
+        for(const image of original){const kept=moved.find((row)=>row.id===image.id);assert.equal(kept.url,image.url);assert.equal(kept.alt_text,image.alt_text);assert.equal(+kept.created_at,+image.created_at);}
+        await legacySave([reordered[0],reordered[1]]);
+        assert.deepEqual((await rows()).map((image)=>image.id),[original[2].id,original[0].id]);
+        assert.equal((await client.query("SELECT original_filename FROM media_assets WHERE id=$1",[assetId])).rows[0].original_filename,"front.JPG");
+      } finally { if(origin===undefined)delete process.env.BETTER_AUTH_URL;else process.env.BETTER_AUTH_URL=origin; }
     });
     assert.deepEqual(await publicCounts(),before);
   } finally { await client.end(); }

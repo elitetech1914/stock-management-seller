@@ -1,13 +1,12 @@
 "use client";
 
-/* eslint-disable @next/next/no-img-element -- These are already optimized Garage images. */
-
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, Copy, ImagePlus, Loader2, UploadCloud, X } from "lucide-react";
+import { CheckCircle2, ImagePlus, Loader2, UploadCloud, X } from "lucide-react";
 
+import { MediaLibrary } from "./media-library";
 import { BatchSelect } from "@/components/admin/batch-select";
-import { MAX_UPLOAD_SELECTION, UPLOAD_CONCURRENCY, type MediaAssetView } from "@/lib/media/shared";
+import { MAX_UPLOAD_SELECTION, UPLOAD_CONCURRENCY } from "@/lib/media/shared";
 import { sendMediaFile, validateUploadFile } from "@/lib/media/upload-client";
 
 type Batch = { id: string; name: string; createdAt: string };
@@ -36,8 +35,7 @@ export function BulkImages() {
   const [batchId, setBatchId] = useState("");
   const [batchCursor, setBatchCursor] = useState<string | null>(null);
   const [batchName, setBatchName] = useState("");
-  const [assets, setAssets] = useState<MediaAssetView[]>([]);
-  const [assetCursor, setAssetCursor] = useState<string | null>(null);
+  const [libraryRefresh, setLibraryRefresh] = useState(0);
   const [uploads, setUploads] = useState<Upload[]>([]);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -56,27 +54,16 @@ export function BulkImages() {
       setBatches(data.batches);
       setBatchCursor(data.nextCursor);
       if (data.batches.length) setBatchId(data.batches[0].id);
-      else setLoading(false);
+      setLoading(false);
     }).catch((failure) => {
       if (!controller.signal.aborted) { setError(failure.message); setLoading(false); }
     });
     return () => controller.abort();
   }, [batchAttempt]);
 
-  useEffect(() => {
-    if (!batchId) return;
-    const controller = new AbortController();
-    jsonRequest(`/api/admin/media/assets?batchId=${batchId}`, { signal: controller.signal }).then((data) => {
-      setAssets(data.assets); setAssetCursor(data.nextCursor); setLoading(false);
-    }).catch((failure) => {
-      if (!controller.signal.aborted) { setError(failure.message); setLoading(false); }
-    });
-    return () => controller.abort();
-  }, [batchId]);
-
   function selectBatch(id: string) {
-    setBatchId(id); setUploads([]); setAssets([]); setAssetCursor(null);
-    setError(""); setNotice(""); setLoading(Boolean(id));
+    setBatchId(id); setUploads([]);
+    setError(""); setNotice(""); setLoading(false);
   }
 
   async function createBatch(event: React.FormEvent) {
@@ -116,17 +103,6 @@ export function BulkImages() {
     setUploads((previous) => previous.map((item) => item.id === id ? { ...item, ...patch } : item));
   }
 
-  async function loadAssets(append = false) {
-    if (!batchId) return;
-    setLoading(true); setError("");
-    try {
-      const data = await jsonRequest(`/api/admin/media/assets?batchId=${batchId}${append && assetCursor ? `&beforeId=${assetCursor}` : ""}`);
-      setAssets((previous) => append ? [...previous, ...data.assets] : data.assets);
-      setAssetCursor(data.nextCursor);
-    } catch (failure) { setError(failure instanceof Error ? failure.message : "Could not load images."); }
-    finally { setLoading(false); }
-  }
-
   async function uploadFiles() {
     if (running.current || !batchId) return;
     const queue = uploads.filter((item) => item.state === "queued");
@@ -147,7 +123,7 @@ export function BulkImages() {
         }
       }
     }
-    try { await Promise.all(Array.from({ length: UPLOAD_CONCURRENCY }, worker)); await loadAssets(); }
+    try { await Promise.all(Array.from({ length: UPLOAD_CONCURRENCY }, worker)); setLibraryRefresh((value) => value + 1); }
     finally { setBusy(false); running.current = false; }
   }
 
@@ -244,25 +220,9 @@ export function BulkImages() {
       <section className="rounded-2xl border border-neutral-200 bg-white p-4 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div><h2 className="font-semibold">Batch library</h2><p className="mt-1 text-sm text-neutral-500">Choose these images in the product editor, use filenames in a CSV import, or copy URLs when creating a product.</p></div>
-          <button type="button" disabled={!batchId || busy || loading} onClick={() => loadAssets()} className="text-sm font-medium text-[#17352c] disabled:opacity-50">Refresh</button>
         </div>
         <p className="mt-3 text-xs leading-5 text-neutral-500">Uploading images does not assign them to products. Choose this batch in Edit product, or in <Link href="/admin/import" className="font-medium text-brand underline underline-offset-4">Import products</Link> match exact filenames using image_1–image_5.</p>
-        {loading ? <p role="status" className="mt-8 flex items-center gap-2 text-sm text-neutral-500"><Loader2 size={16} className="animate-spin" />Loading library…</p>
-          : !assets.length ? <p className="py-12 text-center text-sm text-neutral-500">{batchId ? "No images uploaded in this batch yet." : "Select a batch to view its images."}</p>
-          : <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
-            {assets.map((asset) => <article key={asset.id} className="overflow-hidden rounded-xl border border-neutral-200">
-              <div className="aspect-square bg-neutral-50"><img src={asset.url} alt={asset.originalFilename} loading="lazy" className="h-full w-full object-contain p-3" /></div>
-              <div className="p-3">
-                <p className="truncate text-xs font-medium" title={asset.originalFilename}>{asset.originalFilename}</p>
-                <p className="mt-1 text-xs text-neutral-500">{asset.width} × {asset.height} · {Math.ceil(asset.sizeBytes / 1024)} KiB</p>
-                <button type="button" className="mt-3 inline-flex min-h-11 items-center gap-1.5 text-xs font-medium text-[#17352c]" onClick={async () => {
-                  try { await navigator.clipboard.writeText(asset.url); setNotice(`Copied image URL for ${asset.originalFilename}.`); }
-                  catch { setNotice(`Copy this image URL: ${asset.url}`); }
-                }}><Copy size={13} />Copy image URL</button>
-              </div>
-            </article>)}
-          </div>}
-        {assetCursor && <button type="button" disabled={loading || busy} onClick={() => loadAssets(true)} className={`${buttonClass} mt-6`}>Load more images</button>}
+        <MediaLibrary batchId={batchId} disabled={busy || creating} refreshKey={libraryRefresh} />
       </section>
     </div>
   );

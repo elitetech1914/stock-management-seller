@@ -10,6 +10,7 @@ import {
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 // Media is independent of products: the original filename belongs to an import
 // batch, and remains available when a product is renamed or removed.
@@ -23,6 +24,9 @@ export const mediaAssets = pgTable("media_assets", {
   id: uuid("id").defaultRandom().primaryKey(),
   batchId: uuid("batch_id").notNull().references(() => importBatches.id, { onDelete: "restrict" }),
   originalFilename: varchar("original_filename", { length: 255 }).notNull(),
+  descriptiveName: varchar("descriptive_name", { length: 255 }),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
+  storageDeletedAt: timestamp("storage_deleted_at", { withTimezone: true }),
   objectKey: text("object_key").notNull().unique(),
   mimeType: varchar("mime_type", { length: 50 }).notNull(),
   sizeBytes: integer("size_bytes").notNull(),
@@ -30,7 +34,7 @@ export const mediaAssets = pgTable("media_assets", {
   height: integer("height").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [
-  uniqueIndex("media_assets_batch_filename_idx").on(table.batchId, table.originalFilename),
+  uniqueIndex("media_assets_batch_filename_idx").on(table.batchId, table.originalFilename).where(sql`${table.storageDeletedAt} IS NULL`),
   index("media_assets_batch_created_idx").on(table.batchId, table.createdAt, table.id),
 ]);
 
@@ -225,6 +229,7 @@ export const productImages =
   pgTable(
     "product_images",
     {
+      mediaAssetId: uuid("media_asset_id").references(() => mediaAssets.id, { onDelete: "restrict" }),
       id: uuid("id")
         .defaultRandom()
         .primaryKey(),
@@ -268,6 +273,7 @@ export const productImages =
       index(
         "product_images_product_id_idx"
       ).on(table.productId),
+      index("product_images_media_asset_id_idx").on(table.mediaAssetId),
     ]
   );
 
@@ -379,6 +385,7 @@ export const productVariants =
       imageUrl: text(
         "image_url"
       ),
+      mediaAssetId: uuid("media_asset_id").references(() => mediaAssets.id, { onDelete: "restrict" }),
 
       isActive: boolean(
         "is_active"
@@ -408,6 +415,7 @@ export const productVariants =
       index(
         "product_variants_product_id_idx"
       ).on(table.productId),
+      index("product_variants_media_asset_id_idx").on(table.mediaAssetId),
     ]
   );
 

@@ -1,12 +1,12 @@
 "use client";
 
-/* eslint-disable @next/next/no-img-element -- Preserve existing external images and display optimized media URLs without a remote-host allowlist. */
-
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, CheckCircle2, ImageIcon, Loader2, UploadCloud, X } from "lucide-react";
+import { MediaLibrary } from "./media-library";
+import { MediaThumbnail } from "./media-thumbnail";
 import { BatchSelect } from "./batch-select";
 import { useProductEdit } from "./product-edit-form";
-import { appendGalleryAssets, galleryIdentity, type ProductGalleryItem } from "@/lib/media/product-gallery";
+import { appendGalleryAssets, galleryItemIdentity, type ProductGalleryItem } from "@/lib/media/product-gallery";
 import { MAX_UPLOAD_SELECTION, UPLOAD_CONCURRENCY, type MediaAssetView } from "@/lib/media/shared";
 import { sendMediaFile, validateUploadFile } from "@/lib/media/upload-client";
 
@@ -22,17 +22,9 @@ async function requestJson(url: string, init?: RequestInit) {
   return data;
 }
 
-function Thumbnail({ url, alt }: { url: string; alt: string }) {
-  const [failed, setFailed] = useState(false);
-  return <div className="flex aspect-square max-h-40 w-full items-center justify-center rounded-lg bg-neutral-50">
-    {failed ? <div className="p-3 text-center text-xs text-muted"><ImageIcon size={24} aria-hidden="true" className="mx-auto mb-2" />Image unavailable</div>
-      : <img src={url} alt={alt} loading="lazy" onError={() => setFailed(true)} className="h-full w-full object-contain p-3" />}
-  </div>;
-}
-
 export function ProductImageEditor({ initialImages }: { initialImages: ProductGalleryItem[] }) {
   const { saving, setUploadsBlocked } = useProductEdit();
-  const [gallery, setGallery] = useState(() => initialImages.filter((item, index) => initialImages.findIndex((candidate) => galleryIdentity(candidate.url) === galleryIdentity(item.url)) === index));
+  const [gallery, setGallery] = useState(() => [...initialImages]);
   const [view, setView] = useState<"library" | "upload">("library");
   const [batches, setBatches] = useState<Batch[]>([]);
   const [batchId, setBatchId] = useState("");
@@ -41,11 +33,7 @@ export function ProductImageEditor({ initialImages }: { initialImages: ProductGa
   const [batchAttempt, setBatchAttempt] = useState(0);
   const [batchesLoading, setBatchesLoading] = useState(true);
   const [creating, setCreating] = useState(false);
-  const [assets, setAssets] = useState<MediaAssetView[]>([]);
-  const [assetCursor, setAssetCursor] = useState<string | null>(null);
   const [assetRefresh, setAssetRefresh] = useState(0);
-  const [assetsLoading, setAssetsLoading] = useState(false);
-  const [selected, setSelected] = useState<string[]>([]);
   const [uploads, setUploads] = useState<Upload[]>([]);
   const [busy, setBusy] = useState(false);
   const [dragging, setDragging] = useState(false);
@@ -53,10 +41,10 @@ export function ProductImageEditor({ initialImages }: { initialImages: ProductGa
   const [notice, setNotice] = useState("");
   const fileInput = useRef<HTMLInputElement>(null);
   const running = useRef(false);
-  const libraryRequest = useRef(0);
+  const [libraryBusy, setLibraryBusy] = useState(false);
   const unresolved = uploads.some((upload) => upload.state !== "success");
 
-  useEffect(() => { setUploadsBlocked(unresolved || busy || creating); }, [unresolved, busy, creating, setUploadsBlocked]);
+  useEffect(() => { setUploadsBlocked(unresolved || busy || creating || libraryBusy); }, [unresolved, busy, creating, libraryBusy, setUploadsBlocked]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -66,19 +54,8 @@ export function ProductImageEditor({ initialImages }: { initialImages: ProductGa
     return () => controller.abort();
   }, [batchAttempt]);
 
-  useEffect(() => {
-    if (!batchId) return;
-    const controller = new AbortController();
-    const version = ++libraryRequest.current;
-    requestJson(`/api/admin/media/assets?batchId=${encodeURIComponent(batchId)}`, { signal: controller.signal }).then((data) => {
-      if (!controller.signal.aborted && version === libraryRequest.current) { setAssets(data.assets); setAssetCursor(data.nextCursor); setAssetsLoading(false); }
-    }).catch((failure) => { if (!controller.signal.aborted && version === libraryRequest.current) { setError(failure.message); setAssetsLoading(false); } });
-    return () => controller.abort();
-  }, [batchId, assetRefresh]);
-
   function selectBatch(id: string) {
-    libraryRequest.current++;
-    setBatchId(id); setAssets([]); setSelected([]); setAssetCursor(null); setAssetsLoading(Boolean(id));
+    setBatchId(id);
     setUploads((previous) => previous.filter((upload) => upload.state !== "success"));
     setError(""); setNotice("");
   }
@@ -101,26 +78,6 @@ export function ProductImageEditor({ initialImages }: { initialImages: ProductGa
       setBatches((previous) => [...previous, ...data.batches]); setBatchCursor(data.nextCursor);
     } catch (failure) { setError(failure instanceof Error ? failure.message : "Could not load batches."); }
     finally { setBatchesLoading(false); }
-  }
-
-  async function loadMoreImages() {
-    if (!batchId || !assetCursor || assetsLoading) return;
-    const version = ++libraryRequest.current;
-    setAssetsLoading(true); setError("");
-    try {
-      const data = await requestJson(`/api/admin/media/assets?batchId=${encodeURIComponent(batchId)}&beforeId=${encodeURIComponent(assetCursor)}`);
-      if (version === libraryRequest.current) {
-        setAssets((previous) => [...previous, ...data.assets.filter((asset: MediaAssetView) => !previous.some((item) => item.id === asset.id))]); setAssetCursor(data.nextCursor);
-      }
-    } catch (failure) { if (version === libraryRequest.current) setError(failure instanceof Error ? failure.message : "Could not load images."); }
-    finally { if (version === libraryRequest.current) setAssetsLoading(false); }
-  }
-
-  function addSelected() {
-    const additions = assets.filter((asset) => selected.includes(asset.id));
-    if (gallery.length + additions.length > MAX_UPLOAD_SELECTION) { setError(`A product can have up to ${MAX_UPLOAD_SELECTION} images. Select fewer images.`); return; }
-    setGallery((current) => appendGalleryAssets(current, additions)); setSelected([]);
-    setNotice("Selected images added to the gallery. Save changes to apply them.");
   }
 
   function addFiles(files: File[]) {
@@ -169,7 +126,7 @@ export function ProductImageEditor({ initialImages }: { initialImages: ProductGa
       await Promise.all(Array.from({ length: UPLOAD_CONCURRENCY }, worker));
       const additions = completed.filter((asset): asset is MediaAssetView => Boolean(asset));
       setGallery((current) => appendGalleryAssets(current, additions));
-      setSelected([]); setAssetsLoading(true); setAssetRefresh((version) => version + 1);
+      setAssetRefresh((version) => version + 1);
       if (additions.length) setNotice(`${additions.length} uploaded image(s) added to the gallery. Save changes to apply them.`);
     } finally { running.current = false; setBusy(false); }
   }
@@ -178,8 +135,8 @@ export function ProductImageEditor({ initialImages }: { initialImages: ProductGa
     setGallery((current) => { const next = [...current]; const [item] = next.splice(index, 1); next.splice(target, 0, item); return next; });
   }
 
-  const galleryIds = new Set(gallery.map((item) => galleryIdentity(item.url)));
-  const locked = saving || busy || creating;
+  const galleryIds = new Set(gallery.map(galleryItemIdentity));
+  const locked = saving || busy || creating || libraryBusy;
   const queued = uploads.filter((upload) => upload.state === "queued").length;
 
   return <section aria-labelledby="product-images-heading" className="rounded-2xl border border-neutral-200 bg-white p-4 sm:p-6">
@@ -187,8 +144,8 @@ export function ProductImageEditor({ initialImages }: { initialImages: ProductGa
     <h2 id="product-images-heading" className="font-semibold">Product images</h2>
     <p className="mt-1 text-sm leading-6 text-muted">Choose uploaded images or upload from your computer. The first image is primary; save changes to update the product.</p>
     {gallery.length ? <ol aria-label="Product gallery" className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 2xl:grid-cols-4">
-      {gallery.map((item, index) => <li key={galleryIdentity(item.url)} className="min-w-0 rounded-xl border border-border p-2">
-        <Thumbnail url={item.url} alt={item.altText || `Product image ${index + 1}`} />
+      {gallery.map((item, index) => <li key={item.reference.imageId || galleryItemIdentity(item)} className="min-w-0 rounded-xl border border-border p-2">
+        <MediaThumbnail url={item.url} alt={item.altText || `Product image ${index + 1}`} />
         <div className="mt-2 flex items-center justify-between gap-2"><p className="text-xs font-medium text-brand">{index === 0 ? "Primary image" : `Image ${index + 1}`}</p>
           <button type="button" disabled={locked} onClick={() => setGallery((current) => current.filter((_, position) => position !== index))} aria-label={`Remove image ${index + 1}`} className={control}><X size={16} aria-hidden="true" /></button></div>
         <div className="mt-2 grid grid-cols-2 gap-1 sm:grid-cols-[1fr_44px_44px]">
@@ -214,25 +171,15 @@ export function ProductImageEditor({ initialImages }: { initialImages: ProductGa
       </div>}
       {notice && <p role="status" className="mt-4 rounded-xl bg-neutral-50 p-4 text-sm leading-6 text-brand">{notice}</p>}
       <div role="group" aria-label="Image source" className="mt-5 flex flex-wrap gap-2">
-        <button type="button" aria-pressed={view === "library"} disabled={saving} onClick={() => setView("library")} className={view === "library" ? "ui-button" : control}>Choose from library</button>
-        <button type="button" aria-pressed={view === "upload"} disabled={saving} onClick={() => setView("upload")} className={view === "upload" ? "ui-button" : control}>Upload from computer</button>
+        <button type="button" aria-pressed={view === "library"} disabled={saving || libraryBusy} onClick={() => setView("library")} className={view === "library" ? "ui-button" : control}>Choose from library</button>
+        <button type="button" aria-pressed={view === "upload"} disabled={saving || libraryBusy} onClick={() => setView("upload")} className={view === "upload" ? "ui-button" : control}>Upload from computer</button>
       </div>
 
-      {view === "library" ? <div className="mt-5">
-        <div className="flex flex-wrap items-center justify-between gap-2"><p className="text-sm text-muted">{selected.length} selected in this batch</p><button type="button" disabled={!batchId || locked || assetsLoading} onClick={() => { setAssetsLoading(true); setSelected([]); setError(""); setAssetRefresh((version) => version + 1); }} className={control}>Refresh library</button></div>
-        {!batchId ? <p className="py-8 text-sm text-muted">Choose or create a batch to browse images.</p>
-          : !assets.length ? <p role="status" className="py-8 text-sm text-muted">{assetsLoading ? "Loading images…" : "No images in this batch yet. Upload images from your computer."}</p>
-          : <div className="mt-4 grid max-h-[480px] grid-cols-2 gap-3 overflow-y-auto p-1 sm:grid-cols-3 2xl:grid-cols-4">{assets.map((asset) => {
-            const added = galleryIds.has(galleryIdentity(asset.url));
-            return <label key={asset.id} className={"min-w-0 cursor-pointer rounded-xl border p-2 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-brand " + (selected.includes(asset.id) ? "border-brand bg-[#f0f5f1]" : "border-border")}>
-              <Thumbnail url={asset.url} alt={asset.originalFilename} />
-              <div className="mt-2 flex min-h-11 items-center gap-2"><input type="checkbox" disabled={locked || added} checked={added || selected.includes(asset.id)} onChange={() => setSelected((current) => current.includes(asset.id) ? current.filter((id) => id !== asset.id) : [...current, asset.id])} aria-label={`Select ${asset.originalFilename}`} className="h-4 w-4 shrink-0 accent-brand" /><span className="min-w-0 break-words text-xs font-medium">{asset.originalFilename}</span></div>
-              {added && <p className="text-xs text-muted">Already in gallery</p>}
-            </label>;
-          })}</div>}
-        {assetCursor && <button type="button" disabled={locked || assetsLoading} onClick={loadMoreImages} className={control + " mt-4"}>{assetsLoading ? "Loading…" : "Load more images"}</button>}
-        <button type="button" disabled={locked || !selected.length} onClick={addSelected} className="ui-button mt-4">Add selected images</button>
-      </div> : <div className="mt-5">
+      {view === "library" ? <MediaLibrary batchId={batchId} disabled={saving || busy || creating} refreshKey={assetRefresh} galleryIds={galleryIds} onBusyChange={setLibraryBusy} onAddSelected={(additions) => {
+        if (gallery.length + additions.length > MAX_UPLOAD_SELECTION) { setError(`A product can have up to ${MAX_UPLOAD_SELECTION} images. Select fewer images.`); return false; }
+        setGallery((current) => appendGalleryAssets(current, additions));
+        setNotice("Selected images added to the gallery. Save changes to apply them."); return true;
+      }} /> : <div className="mt-5">
         <p className="text-xs leading-5 text-muted">JPG, PNG and WebP · 10 MiB per file · up to 25 megapixels · no animation</p>
         <div onDragOver={(event) => { event.preventDefault(); if (batchId && !locked) setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={(event) => { event.preventDefault(); setDragging(false); addFiles(Array.from(event.dataTransfer.files)); }} className={"mt-3 rounded-xl border-2 border-dashed px-4 py-8 text-center " + (dragging ? "border-brand bg-emerald-50" : "border-border bg-neutral-50")}>
           <UploadCloud size={28} aria-hidden="true" className="mx-auto text-brand" />

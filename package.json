@@ -12,6 +12,7 @@
     "test:csv-images": "node --test tests/csv-images.test.mjs",
     "test:product-gallery": "node --test tests/product-gallery.test.mjs",
     "test:media-management-migration": "node --test tests/media-management-migration.test.mjs",
+    "test:media-management": "node --test tests/media-management.test.mjs",
     "db:media-status": "node scripts/check-media-migration.mjs",
     "db:media-migrate": "node scripts/migrate-media.mjs",
     "db:media-management": "node scripts/migrate-media-management.mjs",

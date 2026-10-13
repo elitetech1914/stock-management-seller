@@ -36,6 +36,6 @@ export function ProductEditSaveButton() {
     <button type="submit" disabled={saving || uploadsBlocked} aria-busy={saving} className="ui-button h-12 w-full">
       {saving ? <><Loader2 size={16} aria-hidden="true" className="animate-spin" />Saving…</> : "Save changes"}
     </button>
-    {uploadsBlocked && <p role="status" className="mt-2 text-xs leading-5 text-muted">Upload, retry or remove the remaining files before saving.</p>}
+    {uploadsBlocked && <p role="status" className="mt-2 text-xs leading-5 text-muted">Finish image-library changes, then upload, retry or remove any remaining files before saving.</p>}
   </div>;
 }
