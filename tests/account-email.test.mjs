@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+
 import { admin } from "better-auth/plugins";
 import { NextRequest } from "next/server.js";
 import { loadSource } from "./auth-source.mjs";
@@ -132,5 +135,97 @@ test("security pages enforce session and administrator role on the server", asyn
       if (!session || (adminPage && session.user.role !== "admin")) await assert.rejects(page.default(), /redirect:/);
       else assert(await page.default());
     }
+  }
+});
+
+function loginPageFixture(file, session, cookie = "", Form = function LoginForm() { return null; }) {
+  const requestHeaders = new Headers(cookie ? { cookie } : undefined);
+  let sessionChecks = 0;
+  const page = loadSource(file, {
+    "next/headers": { headers: async () => requestHeaders },
+    "next/navigation": { redirect: destination => { throw Object.assign(new Error("Login redirect"), { destination }); } },
+    "@/lib/auth": { auth: { api: { getSession: async ({ headers }) => {
+      sessionChecks++;
+      assert.equal(headers, requestHeaders);
+      if (session instanceof Error) throw session;
+      return session;
+    } } } },
+    "./login-form": Form,
+  });
+  return { page, Form, get sessionChecks() { return sessionChecks; } };
+}
+
+test("sign-in pages check sessions on the server and redirect existing buyers and administrators", async () => {
+  for (const [file, adminPage] of [["src/app/login/page.tsx", false], ["src/app/admin/login/page.tsx", true]]) {
+    const cases = [
+      ["", null],
+      ["better-auth.session_token=expired", null],
+      ["better-auth.session_token=revoked", null],
+      ["better-auth.session_token=buyer", { user: { id: "buyer", role: "user" } }],
+      ["better-auth.session_token=admin", { user: { id: "admin", role: "admin" } }],
+    ];
+    for (const [cookie, session] of cases) {
+      const fixture = loginPageFixture(file, session, cookie);
+      assert.equal(fixture.page.dynamic, "force-dynamic");
+      const result = fixture.page.default({ searchParams: Promise.resolve({}) });
+      if (session) {
+        const destination = adminPage && session.user.role === "admin" ? "/admin" : "/account";
+        await assert.rejects(result, error => error.destination === destination);
+      } else {
+        const element = await result;
+        assert.equal(element.type, fixture.Form);
+        if (!adminPage) assert.equal(element.props.redirectTo, "/account");
+      }
+      assert.equal(fixture.sessionChecks, 1);
+    }
+    const unavailable = loginPageFixture(file, new Error("Session lookup unavailable"));
+    await assert.rejects(unavailable.page.default({ searchParams: Promise.resolve({}) }), /Session lookup unavailable/);
+    assert.equal(unavailable.sessionChecks, 1);
+  }
+});
+
+test("buyer sign-in uses the same validated destination for existing sessions and successful form submission", async () => {
+  const unsafe = [
+    undefined, "", "https://evil.invalid", "https://www.apextradealliance.com/account", "//evil.invalid", "///evil.invalid", "javascript:alert(1)",
+    "/\\evil.invalid", "/checkout?next=\\evil.invalid", "/\u0000evil.invalid", "/checkout?x=\n", "/\u007fevil.invalid", "/%5Cevil.invalid", "/%2Fevil.invalid", "/%0alogin", "/%",
+    "/login", "/LOGIN", "/login/", "/login?next=/checkout", "/login#form", "/%6cogin", "/account/../login", "/admin/login", "/admin//login/", "/register?next=/checkout",
+  ];
+  const cases = [
+    ...unsafe.map(next => [next, "/account"]),
+    ["/", "/"],
+    ["/account/orders?status=pending#latest", "/account/orders?status=pending#latest"],
+    ["/checkout?source=cart#shipping", "/checkout?source=cart#shipping"],
+    ["/products?search=50%25%20off", "/products?search=50%25%20off"],
+    ["/orders/../checkout", "/checkout"],
+    [["/checkout", "https://evil.invalid"], "/checkout"],
+    [["https://evil.invalid", "/checkout"], "/account"],
+  ];
+  for (const [next, destination] of cases) {
+    for (const session of [null, { user: { id: "buyer", role: "user" } }]) {
+      const fixture = loginPageFixture("src/app/login/page.tsx", session);
+      const result = fixture.page.default({ searchParams: Promise.resolve({ next }) });
+      if (session) await assert.rejects(result, error => error.destination === destination);
+      else assert.equal((await result).props.redirectTo, destination);
+      assert.equal(fixture.sessionChecks, 1);
+    }
+  }
+});
+
+test("anonymous sign-in pages retain their forms, current-password inputs and reset success notices", async () => {
+  for (const file of ["src/app/login/page.tsx", "src/app/admin/login/page.tsx"]) {
+    const client = loadSource(file.replace("page.tsx", "login-form.tsx"), {
+      "next/link": ({ children, ...props }) => createElement("a", props, children),
+      "next/navigation": { useRouter: () => ({ push() {}, refresh() {} }), useSearchParams: () => new URLSearchParams("reset=success") },
+      "@/lib/auth-client": { authClient: { signIn: { email: async () => ({}) } } },
+    });
+    const fixture = loginPageFixture(file, null, "", client.default);
+    const element = await fixture.page.default({ searchParams: Promise.resolve({ reset: "success" }) });
+    const markup = renderToStaticMarkup(element);
+    assert(markup.includes("<form"));
+    assert(markup.includes("Your password was reset. Sign in with your new password."));
+    assert(markup.includes('autoComplete="email"'));
+    assert(markup.includes('autoComplete="current-password"'));
+    assert(!markup.includes('minLength='));
+    assert(markup.includes(file.includes("/admin/") ? 'href="/admin/forgot-password"' : 'href="/forgot-password"'));
   }
 });
