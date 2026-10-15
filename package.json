@@ -17,12 +17,15 @@
     "db:media-migrate": "node scripts/migrate-media.mjs",
     "db:media-management": "node scripts/migrate-media-management.mjs",
     "db:media-runtime": "node scripts/check-media-runtime.mjs",
+    "db:auth-email": "node scripts/migrate-auth-email.mjs",
+    "test:auth-email-migration": "node --test tests/auth-email-migration.test.mjs",
     "db:generate": "drizzle-kit generate --config=drizzle.config.ts",
     "db:migrate": "drizzle-kit migrate --config=drizzle.config.ts",
     "db:push": "drizzle-kit push --config=drizzle.config.ts",
     "db:check": "drizzle-kit check --config=drizzle.config.ts",
     "db:studio": "drizzle-kit studio --config=drizzle.config.ts",
-    "auth:migrate": "npx auth@latest migrate --config ./src/lib/auth.ts --yes"
+    "auth:migrate": "npx auth@latest migrate --config ./src/lib/auth.ts --yes",
+    "db:auth-email-runtime": "node scripts/check-auth-email-runtime.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1148.0",

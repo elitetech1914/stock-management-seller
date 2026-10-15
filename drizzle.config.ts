@@ -20,7 +20,7 @@ export default defineConfig({
   },
 
   /*
-   * Only Stockmora application tables
+   * Application tables and the additive authentication rate limiter
    * are managed by Drizzle.
    *
    * Better Auth's user/session/account
@@ -35,6 +35,7 @@ export default defineConfig({
     "order_items",
     "import_batches",
     "media_assets",
+    "rateLimit",
   ],
 
   verbose: true,

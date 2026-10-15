@@ -1,5 +1,6 @@
 import {
   boolean,
+  bigint,
   index,
   integer,
   pgEnum,
@@ -11,6 +12,15 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
+
+// Better Auth owns the counters; this additive table is migrated independently
+// of the existing user, account, session and verification tables.
+export const authRateLimits = pgTable("rateLimit", {
+  id: text("id").primaryKey(),
+  key: text("key").notNull().unique(),
+  count: integer("count").notNull(),
+  lastRequest: bigint("lastRequest", { mode: "number" }).notNull(),
+}, (table) => [index("rateLimit_last_request_idx").on(table.lastRequest)]);
 
 // Media is independent of products: the original filename belongs to an import
 // batch, and remains available when a product is renamed or removed.
