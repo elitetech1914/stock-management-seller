@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { admin } from "better-auth/plugins";
+import { NextRequest } from "next/server.js";
 import { loadSource } from "./auth-source.mjs";
 
 const queue = [];
@@ -8,6 +9,64 @@ const email = loadSource("src/lib/account-email.ts", { "next/server": { after: j
 const options = loadSource("src/lib/auth-options.ts", { "better-auth/plugins": { admin } });
 const policy = loadSource("src/lib/auth-policy.ts");
 const message = { kind: "reset", name: '<img src=x onerror="alert(1)"> & Pat', email: "fixture@example.invalid", url: "https://www.apextradealliance.com/api/auth/reset-password/test-token?callbackURL=https%3A%2F%2Fwww.apextradealliance.com%2Freset-password&extra=%22" };
+
+const verificationCallback = loadSource("src/app/verify-email/callback/route.ts", { "@/lib/auth-options": options });
+
+test("verification callback uses the configured public origin and preserves destinations and security headers", () => {
+  const previous = { NODE_ENV: process.env.NODE_ENV, BETTER_AUTH_URL: process.env.BETTER_AUTH_URL };
+  try {
+    process.env.NODE_ENV = "production";
+    process.env.BETTER_AUTH_URL = policy.PUBLIC_ORIGIN + "/";
+    const unsafeQuery = new URLSearchParams({ context: "https://evil.invalid", next: "//evil.invalid", callbackURL: "https://evil.invalid" });
+    const cases = [
+      ["", "/verify-email/success"],
+      ["?context=admin", "/verify-email/success?context=admin"],
+      ["?error=TOKEN_EXPIRED", "/verify-email/failure"],
+      ["?error=INVALID_TOKEN&context=admin", "/verify-email/failure?context=admin"],
+      ["?" + unsafeQuery, "/verify-email/success"],
+      ["?error=INVALID_TOKEN&" + unsafeQuery, "/verify-email/failure"],
+      ["?context=admin&next=https%3A%2F%2Fevil.invalid", "/verify-email/success?context=admin"],
+    ];
+    for (const requestOrigin of ["http://localhost:3000", "https://localhost:3000", "https://evil.invalid"]) {
+      for (const [query, destination] of cases) {
+        const request = new NextRequest(requestOrigin + "/verify-email/callback" + query, { headers: { host: "evil.invalid", "x-forwarded-host": "evil.invalid", "x-forwarded-proto": "http", forwarded: "host=evil.invalid;proto=http" } });
+        const response = verificationCallback.GET(request);
+        assert.equal(response.status, 307);
+        assert.equal(response.headers.get("location"), policy.PUBLIC_ORIGIN + destination);
+        assert.equal(response.headers.get("cache-control"), "no-store");
+        assert.equal(response.headers.get("referrer-policy"), "no-referrer");
+      }
+    }
+  } finally {
+    for (const [key, value] of Object.entries(previous)) {
+      if (value === undefined) delete process.env[key]; else process.env[key] = value;
+    }
+  }
+});
+
+test("verification callback rejects unsafe production configuration and supports local development", () => {
+  const previous = { NODE_ENV: process.env.NODE_ENV, BETTER_AUTH_URL: process.env.BETTER_AUTH_URL };
+  const request = new NextRequest("https://localhost:3000/verify-email/callback?error=TOKEN_EXPIRED&context=admin");
+  try {
+    process.env.NODE_ENV = "production";
+    for (const origin of [undefined, "", "not-a-url", "//evil.invalid", "javascript:alert(1)", "http://www.apextradealliance.com", "http://localhost:3000", "https://localhost:3000", "https://evil.invalid", "https://www.apextradealliance.com.evil.invalid", policy.PUBLIC_ORIGIN + ":444", policy.PUBLIC_ORIGIN + "/api/auth", policy.PUBLIC_ORIGIN + "?next=https://evil.invalid", policy.PUBLIC_ORIGIN + "#fragment", "https://user:password@www.apextradealliance.com"]) {
+      if (origin === undefined) delete process.env.BETTER_AUTH_URL; else process.env.BETTER_AUTH_URL = origin;
+      assert.throws(() => verificationCallback.GET(request));
+    }
+    process.env.NODE_ENV = "development";
+    for (const [configured, expected] of [[undefined, "http://localhost:3000"], ["http://localhost:3001/", "http://localhost:3001"]]) {
+      if (configured === undefined) delete process.env.BETTER_AUTH_URL; else process.env.BETTER_AUTH_URL = configured;
+      const response = verificationCallback.GET(request);
+      assert.equal(response.headers.get("location"), expected + "/verify-email/failure?context=admin");
+      assert.equal(response.headers.get("cache-control"), "no-store");
+      assert.equal(response.headers.get("referrer-policy"), "no-referrer");
+    }
+  } finally {
+    for (const [key, value] of Object.entries(previous)) {
+      if (value === undefined) delete process.env[key]; else process.env[key] = value;
+    }
+  }
+});
 
 test("password policy, production origin and fixed verification routes", () => {
   assert.equal(policy.passwordError("a passphrase with spaces", "a passphrase with spaces"), "");
