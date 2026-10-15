@@ -15,6 +15,7 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { VerificationReminder } from "@/components/auth/account-shell";
 import { db } from "@/db";
 import { orders } from "@/db/schema";
 import { auth } from "@/lib/auth";
@@ -177,6 +178,9 @@ export default async function AccountPage() {
           </p>
         </div>
       </div>
+
+      <Link href="/account/security" className="mb-4 inline-flex min-h-11 items-center text-sm font-semibold text-[#17352c] underline focus-visible:outline-2">Account security</Link>
+      <VerificationReminder verified={session.user.emailVerified} />
 
       {/* STATS */}
       <div className="mb-7 grid overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm sm:grid-cols-2 lg:grid-cols-4">

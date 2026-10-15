@@ -9,7 +9,6 @@ import {
   Grid2X2,
   Import,
   Images,
-  LogOut,
   Menu,
   Package,
   ShoppingCart,
@@ -18,7 +17,7 @@ import {
   X,
 } from "lucide-react";
 
-import { authClient } from "@/lib/auth-client";
+import { SignOutButton } from "@/components/auth/sign-out-button";
 import { useNavigationDialog } from "@/components/site/use-navigation-dialog";
 import { siteConfig } from "@/config/site";
 
@@ -91,13 +90,7 @@ export function AdminSidebar() {
     );
   }
 
-  async function handleSignOut() {
-    await authClient.signOut();
 
-    window.location.assign(
-      "/admin/login"
-    );
-  }
 
   const content = (
     <>
@@ -174,21 +167,8 @@ export function AdminSidebar() {
           View storefront
         </Link>
 
-        <button
-          type="button"
-          onClick={
-            handleSignOut
-          }
-          className="flex h-10 w-full items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-neutral-700 transition hover:bg-red-50 hover:text-red-600"
-        >
-          <LogOut
-            size={17}
-            strokeWidth={1.8}
-            className="text-neutral-500"
-          />
-
-          Sign out
-        </button>
+        <Link href="/admin/security" className="flex min-h-11 items-center rounded-lg px-3 text-sm font-medium hover:bg-neutral-50 focus-visible:outline-2">Account security</Link>
+        <SignOutButton destination="/admin/login" className="flex w-full items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-neutral-700 hover:bg-red-50 hover:text-red-600" />
       </div>
     </>
   );

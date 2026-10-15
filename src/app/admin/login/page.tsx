@@ -1,10 +1,13 @@
 "use client";
 
+import Link from "next/link";
+import { ResetSuccessNotice } from "@/components/auth/reset-success-notice";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LockKeyhole } from "lucide-react";
 
 import { authClient } from "@/lib/auth-client";
+import { authError } from "@/lib/auth-policy";
 import { siteConfig } from "@/config/site";
 
 export default function AdminLoginPage() {
@@ -18,23 +21,23 @@ export default function AdminLoginPage() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
+    if (loading) return;
     setError("");
     setLoading(true);
 
-    const result = await authClient.signIn.email({
-      email,
-      password,
-    });
-
-    setLoading(false);
-
-    if (result.error) {
-      setError(result.error.message ?? "Unable to sign in.");
-      return;
+    try {
+      const result = await authClient.signIn.email({ email, password });
+      if (result.error) {
+        setError(authError(result.error, result.error.message ?? "Unable to sign in."));
+        return;
+      }
+      router.push("/admin");
+      router.refresh();
+    } catch {
+      setError("Unable to sign in. Please try again.");
+    } finally {
+      setLoading(false);
     }
-
-    router.push("/admin");
-    router.refresh();
   }
 
   return (
@@ -58,6 +61,7 @@ export default function AdminLoginPage() {
           </p>
         </div>
 
+        <ResetSuccessNotice />
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label
@@ -70,6 +74,7 @@ export default function AdminLoginPage() {
             <input
               id="email"
               type="email"
+              autoComplete="email"
               required
               value={email}
               onChange={(event) => setEmail(event.target.value)}
@@ -89,6 +94,7 @@ export default function AdminLoginPage() {
             <input
               id="password"
               type="password"
+              autoComplete="current-password"
               required
               value={password}
               onChange={(event) => setPassword(event.target.value)}
@@ -97,8 +103,9 @@ export default function AdminLoginPage() {
             />
           </div>
 
+          <Link href="/admin/forgot-password" className="inline-flex min-h-11 items-center text-sm font-semibold text-[#17352c] underline focus-visible:outline-2">Forgot password?</Link>
           {error && (
-            <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
               {error}
             </div>
           )}

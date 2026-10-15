@@ -14,6 +14,7 @@ import {
   useState,
 } from "react";
 
+import { authError, MIN_PASSWORD_LENGTH, MAX_PASSWORD_LENGTH, PASSWORD_GUIDANCE } from "@/lib/auth-policy";
 import { authClient } from "@/lib/auth-client";
 import { siteConfig } from "@/config/site";
 
@@ -135,10 +136,10 @@ export default function BuyerAuthForm({
 
     if (
       isRegister &&
-      password.length < 8
+      (password.length < MIN_PASSWORD_LENGTH || password.length > MAX_PASSWORD_LENGTH)
     ) {
       setError(
-        "Password must be at least 8 characters."
+        PASSWORD_GUIDANCE
       );
 
       return;
@@ -153,12 +154,12 @@ export default function BuyerAuthForm({
             name: cleanName,
             email: cleanEmail,
             password,
+            callbackURL: new URL("/verify-email/callback", window.location.origin).href,
           });
 
         if (result.error) {
           setError(
-            result.error.message ||
-              "Unable to create your account."
+            authError(result.error, result.error.message || "Unable to create your account.")
           );
 
           return;
@@ -172,8 +173,7 @@ export default function BuyerAuthForm({
 
         if (result.error) {
           setError(
-            result.error.message ||
-              "Unable to sign in. Please check your email and password."
+            authError(result.error, result.error.message || "Unable to sign in. Please check your email and password.")
           );
 
           return;
@@ -335,13 +335,14 @@ export default function BuyerAuthForm({
               }
               minLength={
                 isRegister
-                  ? 8
+                  ? MIN_PASSWORD_LENGTH
                   : undefined
               }
+              maxLength={isRegister ? MAX_PASSWORD_LENGTH : undefined}
               required
               placeholder={
                 isRegister
-                  ? "At least 8 characters"
+                  ? "15?128 characters"
                   : "Enter your password"
               }
               className="h-12 w-full rounded-xl border border-neutral-300 bg-white pl-11 pr-12 text-sm text-neutral-950 outline-none transition placeholder:text-neutral-500 focus:border-[#17352c] focus:ring-2 focus:ring-[#17352c]/10"
@@ -360,7 +361,7 @@ export default function BuyerAuthForm({
                   ? "Hide password"
                   : "Show password"
               }
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-500 transition hover:text-neutral-700"
+              className="absolute right-1 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-lg text-neutral-500 hover:text-neutral-700 focus-visible:outline-2 focus-visible:outline-[#17352c]"
             >
               {showPassword ? (
                 <EyeOff
@@ -372,6 +373,9 @@ export default function BuyerAuthForm({
             </button>
           </div>
         </div>
+
+        {isRegister && <p className="text-sm leading-6 text-neutral-500">{PASSWORD_GUIDANCE}</p>}
+        {!isRegister && <Link href="/forgot-password" className="inline-flex min-h-11 items-center text-sm font-semibold text-[#17352c] underline">Forgot password?</Link>}
 
         {error && (
           <div
@@ -412,7 +416,7 @@ export default function BuyerAuthForm({
             account?{" "}
             <Link
               href="/login"
-              className="font-semibold text-[#17352c] hover:text-[#102a22]"
+              className="inline-flex min-h-11 items-center font-semibold text-[#17352c] hover:text-[#102a22] focus-visible:outline-2"
             >
               Sign in
             </Link>
@@ -422,7 +426,7 @@ export default function BuyerAuthForm({
             New to {siteConfig.name}?{" "}
             <Link
               href="/register"
-              className="font-semibold text-[#17352c] hover:text-[#102a22]"
+              className="inline-flex min-h-11 items-center font-semibold text-[#17352c] hover:text-[#102a22] focus-visible:outline-2"
             >
               Create account
             </Link>

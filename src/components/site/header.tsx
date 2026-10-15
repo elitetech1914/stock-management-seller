@@ -8,7 +8,6 @@ import {
   ChevronDown,
   ChevronRight,
   Heart,
-  LogOut,
   Package,
   Search,
   ShoppingBag,
@@ -26,6 +25,7 @@ import { StoreNavigation } from "./store-navigation";
 import { CategoryStrip } from "./category-strip";
 
 import { siteConfig } from "@/config/site";
+import { SignOutButton } from "@/components/auth/sign-out-button";
 import { authClient } from "@/lib/auth-client";
 import { useCart } from "@/lib/cart";
 import { useSavedProducts } from "@/lib/saved-products";
@@ -298,14 +298,7 @@ export function Header() {
     );
   }
 
-  async function handleSignOut() {
-    setAccountOpen(false);
-    setCartOpen(false);
 
-    await authClient.signOut();
-
-    window.location.assign("/");
-  }
 
   return (
     <>
@@ -780,6 +773,7 @@ export function Header() {
                         >
                           My orders
                         </GlassAccountLink>
+                        <GlassAccountLink href="/account/security" onClick={() => setAccountOpen(false)} icon={<UserRound size={16} />}>Account security</GlassAccountLink>
 
                         {session.user
                           .role ===
@@ -803,19 +797,7 @@ export function Header() {
                       </div>
 
                       <div className="mt-2 border-t border-white/70 pt-2">
-                        <button
-                          type="button"
-                          onClick={
-                            handleSignOut
-                          }
-                          className="flex min-h-11 w-full items-center gap-3 rounded-xl border border-transparent px-3 py-2.5 text-left text-sm font-medium text-red-600 transition hover:border-red-100 hover:bg-white/75 active:bg-white"
-                        >
-                          <LogOut
-                            size={16}
-                          />
-
-                          Sign out
-                        </button>
+                        <SignOutButton destination="/" className="flex w-full items-center gap-3 rounded-xl border border-transparent px-3 py-2.5 text-left text-sm font-medium text-red-600 hover:border-red-100 hover:bg-white/75" />
                       </div>
                     </div>
                   )}

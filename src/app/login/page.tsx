@@ -13,7 +13,9 @@ import {
   useState,
 } from "react";
 
+import { ResetSuccessNotice } from "@/components/auth/reset-success-notice";
 import { authClient } from "@/lib/auth-client";
+import { authError } from "@/lib/auth-policy";
 import { siteConfig } from "@/config/site";
 
 function getSafeRedirect() {
@@ -100,8 +102,8 @@ export default function LoginPage() {
 
       if (result.error) {
         setError(
-          result.error.message ||
-            "Unable to sign in. Please check your email and password."
+          authError(result.error, result.error.message ||
+            "Unable to sign in. Please check your email and password.")
         );
 
         return;
@@ -196,7 +198,8 @@ export default function LoginPage() {
               </p>
             </div>
 
-            <form
+            <ResetSuccessNotice />
+      <form
               onSubmit={handleSubmit}
               aria-busy={isSubmitting}
               className="space-y-5"
@@ -296,7 +299,8 @@ export default function LoginPage() {
               </div>
 
               {/* ERROR */}
-              {error && (
+              <Link href="/forgot-password" className="inline-flex min-h-11 items-center text-sm font-semibold text-[#17352c] underline focus-visible:outline-2">Forgot password?</Link>
+        {error && (
                 <div
                   role="alert"
                   className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm leading-6 text-red-700"
