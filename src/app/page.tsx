@@ -1,4 +1,5 @@
 export const dynamic = "force-dynamic";
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, PackageCheck } from "lucide-react";
 import { HeroGraphic } from "@/components/store/hero-graphic";
@@ -31,7 +32,7 @@ export default async function Home() {
       <section className="mx-auto max-w-[1500px] px-4 py-8 sm:px-6 lg:px-8">
         <div className="rounded-3xl bg-brand px-6 py-8 text-white sm:p-10 lg:flex lg:items-center lg:justify-between lg:gap-8"><div><p className="text-xs font-medium uppercase tracking-widest text-white/80">Buying for your business?</p><h2 className="mt-3 max-w-2xl text-2xl font-semibold tracking-tight sm:text-3xl">Your next wholesale order starts here.</h2><p className="mt-3 text-sm leading-6 text-white/80">Save products, manage orders, and shop with your buyer account.</p></div><Link href="/register" className="mt-6 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-brand lg:mt-0 lg:shrink-0">Create an account<ArrowRight size={17} /></Link></div>
       </section>
-      <footer className="mt-6 border-t border-border bg-white"><div className="mx-auto flex max-w-[1500px] flex-col gap-4 px-4 py-8 text-sm text-muted sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8"><div><p className="text-xl font-semibold tracking-tight text-brand">{siteConfig.name}</p><p className="mt-1">{siteConfig.tagline}</p></div><p>&copy; {new Date().getFullYear()} {siteConfig.name}. All rights reserved.</p></div></footer>
+      <footer className="mt-6 border-t border-border bg-white"><div className="mx-auto flex max-w-[1500px] flex-col gap-4 px-4 py-8 text-sm text-muted sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8"><div><Link href="/" className="inline-flex min-h-11 items-center rounded-sm"><Image src="/Apex-logo.png" alt={siteConfig.name} width={10279} height={2742} sizes="160px" className="h-auto w-40 max-w-full object-contain" /></Link><p className="mt-1">{siteConfig.tagline}</p></div><p>&copy; {new Date().getFullYear()} {siteConfig.name}. All rights reserved.</p></div></footer>
     </main>
   );
 }

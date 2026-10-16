@@ -319,16 +319,16 @@ export function Header() {
           {/* LOGO */}
           <Link
             href="/"
-            className="flex h-14 w-[132px] min-w-0 items-center rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand sm:w-[180px] sm:shrink-0 lg:w-[200px]"
+            className="flex h-11 w-[112px] min-w-0 items-center rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand sm:w-[140px] sm:shrink-0 lg:w-[160px]"
           >
             <Image
               src="/Apex-logo.png"
               alt={siteConfig.name}
               width={10279}
               height={2742}
-              sizes="(min-width: 1024px) 200px, (min-width: 640px) 180px, 132px"
+              sizes="(min-width: 1024px) 160px, (min-width: 640px) 140px, 112px"
               loading="eager"
-              className="h-auto max-h-14 w-full object-contain"
+              className="h-auto max-h-11 w-full object-contain"
             />
           </Link>
 
