@@ -49,7 +49,7 @@ export function ProductCard({
           href={`/products/${product.slug}`}
           className="block"
         >
-          <div className="relative aspect-[4/5] overflow-hidden rounded-2xl border border-border bg-background">
+          <div className="relative aspect-square overflow-hidden rounded-2xl border border-border bg-background">
             {product.imageUrl ? (
               <img
                 src={product.imageUrl}
