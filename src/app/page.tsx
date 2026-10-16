@@ -1,14 +1,13 @@
 export const dynamic = "force-dynamic";
 import Link from "next/link";
-import { ArrowRight, Grid2X2, PackageCheck } from "lucide-react";
+import { ArrowRight, PackageCheck } from "lucide-react";
 import { HeroGraphic } from "@/components/store/hero-graphic";
 import { ProductCard } from "@/components/store/product-card";
 import { getStoreProducts } from "@/lib/store-products";
-import { getStoreCategories } from "@/lib/store-catalog";
 import { siteConfig } from "@/config/site";
 
 export default async function Home() {
-  const [products, categories] = await Promise.all([getStoreProducts(8), getStoreCategories()]);
+  const products = await getStoreProducts(8);
   return (
     <main className="min-h-screen bg-background text-foreground">
       <section className="mx-auto max-w-[1500px] px-4 py-5 sm:px-6 lg:px-8">
@@ -25,14 +24,6 @@ export default async function Home() {
           <HeroGraphic />
         </div>
       </section>
-      {categories.length > 0 && <section className="mx-auto max-w-[1500px] px-4 py-6 sm:px-6 lg:px-8">
-        <div className="mb-5 flex flex-wrap items-end justify-between gap-3"><h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">Shop by category</h2><Link href="/products" className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-brand">All products<ArrowRight size={16} /></Link></div>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-          {categories.slice(0, 8).map((category) => <Link href={"/categories/" + category.slug} key={category.id} className="ui-panel group flex min-h-20 items-center gap-3 p-4 transition hover:border-brand/30 hover:bg-[#f0f4ec]">
-            <Grid2X2 size={20} strokeWidth={1.6} className="shrink-0 text-muted" /><span className="min-w-0 break-words text-sm font-medium">{category.name}</span><ArrowRight size={16} className="ml-auto hidden shrink-0 text-muted sm:block" />
-          </Link>)}
-        </div>
-      </section>}
       <section className="mx-auto max-w-[1500px] px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-6 flex flex-wrap items-end justify-between gap-3"><div><p className="ui-eyebrow">Fresh additions</p><h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">New wholesale products</h2></div><Link href="/products" className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-brand">Shop all<ArrowRight size={16} /></Link></div>
         {products.length ? <div className="grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-5 md:grid-cols-3 lg:grid-cols-4">{products.map((product) => <ProductCard product={product} key={product.id} />)}</div> : <div className="ui-panel px-6 py-12 text-center"><PackageCheck className="mx-auto text-muted" size={32} /><h3 className="mt-4 font-semibold">New products are on the way</h3><p className="mt-2 text-sm text-muted">Create a buyer account to get ready for your next order.</p><Link href="/register" className="ui-button mt-5">Create an account</Link></div>}

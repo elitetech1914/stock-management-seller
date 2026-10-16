@@ -2,6 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -318,9 +319,17 @@ export function Header() {
           {/* LOGO */}
           <Link
             href="/"
-            className="min-w-0 text-[15px] leading-tight sm:shrink-0 sm:text-[22px] lg:text-[27px] font-semibold tracking-[-0.045em] text-neutral-950"
+            className="flex h-14 w-[132px] min-w-0 items-center rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand sm:w-[180px] sm:shrink-0 lg:w-[200px]"
           >
-            {siteConfig.name}
+            <Image
+              src="/Apex-logo.png"
+              alt={siteConfig.name}
+              width={10279}
+              height={2742}
+              sizes="(min-width: 1024px) 200px, (min-width: 640px) 180px, 132px"
+              loading="eager"
+              className="h-auto max-h-14 w-full object-contain"
+            />
           </Link>
 
           {/* SEARCH */}
