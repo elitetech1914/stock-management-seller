@@ -14,7 +14,7 @@ import {
   useState,
 } from "react";
 
-import { authError, MIN_PASSWORD_LENGTH, MAX_PASSWORD_LENGTH, PASSWORD_GUIDANCE } from "@/lib/auth-policy";
+import { authError, MIN_PASSWORD_LENGTH, MAX_PASSWORD_LENGTH, PASSWORD_GUIDANCE, safeAuthDestination } from "@/lib/auth-policy";
 import { authClient } from "@/lib/auth-client";
 import { siteConfig } from "@/config/site";
 
@@ -23,43 +23,9 @@ type BuyerAuthFormProps = {
 };
 
 function getSafeRedirect() {
-  if (typeof window === "undefined") {
-    return "/";
-  }
-
-  const params =
-    new URLSearchParams(
-      window.location.search
-    );
-
-  const next =
-    params.get("next");
-
-  if (!next) {
-    return "/";
-  }
-
-  // Only allow internal application paths.
-  if (
-    !next.startsWith("/") ||
-    next.startsWith("//")
-  ) {
-    return "/";
-  }
-
-  const pathname =
-    next.split(/[?#]/)[0];
-
-  // Prevent auth redirect loops.
-  if (
-    pathname === "/login" ||
-    pathname === "/register" ||
-    pathname === "/admin/login"
-  ) {
-    return "/";
-  }
-
-  return next;
+  if (typeof window === "undefined") return "/";
+  const next = new URLSearchParams(window.location.search).get("next");
+  return safeAuthDestination(next, "/");
 }
 
 export default function BuyerAuthForm({

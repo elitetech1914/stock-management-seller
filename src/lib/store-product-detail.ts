@@ -22,7 +22,6 @@ export type StoreVariant = {
   option3Name: string | null;
   option3Value: string | null;
 
-  costPriceCents: number;
   wholesalePriceCents: number;
   retailPriceCents: number;
 
@@ -156,9 +155,6 @@ export async function getStoreProductBySlug(
 
       option3Value:
         productVariants.option3Value,
-
-      costPriceCents:
-        productVariants.costPriceCents,
 
       wholesalePriceCents:
         productVariants.wholesalePriceCents,
